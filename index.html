@@ -953,6 +953,211 @@
       line-height: 1.5;
     }
 
+    /* =====================================================
+       MOBILE LAYOUT (<= 767px) — phones only.
+       iPad portrait (768–834px) and everything above keeps
+       the desktop sidebar layout per the product brief.
+       ===================================================== */
+    @media (max-width: 767px) {
+      body { overflow: hidden; }
+
+      /* --- Mobile top app bar --- */
+      .mobile-topbar {
+        position: fixed;
+        top: 0; left: 0; right: 0;
+        height: 56px;
+        display: flex;
+        align-items: center;
+        padding: 0 4px;
+        background: var(--bg-sidebar);
+        border-bottom: 1px solid var(--bg-sidebar-hover);
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+        z-index: 30;
+        transition: background-color var(--transition),
+                    border-color var(--transition);
+      }
+      .hamburger-btn {
+        width: 44px; height: 44px;
+        background: transparent;
+        border: none;
+        color: var(--text);
+        cursor: pointer;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-appearance: none;
+        appearance: none;
+        transition: background-color var(--transition),
+                    transform 160ms ease;
+      }
+      .hamburger-btn:hover  { background: var(--bg-sidebar-hover); }
+      .hamburger-btn:active { transform: scale(0.94); }
+      .hamburger-btn:focus-visible {
+        outline: 2px solid var(--text);
+        outline-offset: 2px;
+      }
+      .hamburger-btn svg { width: 24px; height: 24px; }
+      .topbar-title {
+        flex: 1;
+        text-align: center;
+        font-size: 16px;
+        font-weight: 500;
+        color: var(--text);
+        letter-spacing: 0.3px;
+        /* Compensate for the fixed-width hamburger + bell siblings so
+           the title is perfectly centred instead of biased right. */
+        padding-right: 44px;
+        margin-left: -44px;
+      }
+
+      /* --- Bell button sitting inside the topbar
+              (overrides the desktop `position: fixed`). --- */
+      .bell-btn {
+        position: static;
+        width: 44px; height: 44px;
+        border-radius: 10px;
+        border: 1px solid color-mix(in srgb, var(--text) 18%, transparent);
+        color: color-mix(in srgb, var(--text) 92%, transparent);
+      }
+
+      /* --- Sidebar becomes a slide‑in drawer --- */
+      .sidebar {
+        width: 82% !important;
+        max-width: 320px;
+        transform: translateX(-100%);
+        transition: transform var(--transition),
+                    background-color var(--transition);
+        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.42);
+        z-index: 40;
+      }
+      .sidebar.open { transform: translateX(0); }
+      /* Veto the desktop .collapsed width (52 px) so the drawer
+         can't slide in at 52 px if that class carried over. */
+      .sidebar.collapsed {
+        width: 82% !important;
+        max-width: 320px;
+        transform: translateX(-100%);
+      }
+      .sidebar.collapsed.open { transform: translateX(0); }
+      /* Chevron no longer needs the 180° flip on mobile. */
+      .sidebar.collapsed .toggle-btn svg,
+      .sidebar.open      .toggle-btn svg { transform: none; }
+
+      /* --- Drawer scrim / overlay --- */
+      .drawer-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 35;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity var(--transition);
+      }
+      .drawer-overlay.open {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      /* --- Main sits below the topbar, full-width --- */
+      .main {
+        top: 56px;
+        left: 0;
+      }
+      .sidebar.collapsed ~ .main { left: 0; }
+
+      /* --- Greeting: smaller, generous horizontal padding --- */
+      .greeting {
+        font-size: clamp(32px, 8.5vw, 56px);
+        padding: 16px 22px;
+      }
+
+      /* --- Views: scrub the desktop padding/heading size --- */
+      body[data-view="ficha"] .view-ficha,
+      body[data-view="notif"] .view-notif {
+        padding: 22px 16px 32px;
+        gap: 16px;
+      }
+      .view-heading {
+        font-size: clamp(22px, 5.5vw, 30px);
+      }
+
+      /* --- Cards: full-width, denser padding --- */
+      .ficha-card, .result-card {
+        padding: 22px 18px;
+        border-radius: 14px;
+        max-width: 100%;
+        gap: 20px;
+      }
+
+      /* --- Inputs: 16px font to prevent iOS auto-zoom on focus --- */
+      .question input[type="text"] {
+        padding: 12px 4px;
+        font-size: 16px;
+      }
+
+      /* --- App dropdown: bigger touch rows --- */
+      .app-dropdown-trigger {
+        font-size: 16px;
+        padding: 12px 32px 12px 6px;
+      }
+      .app-dropdown-menu { max-height: 280px; }
+      .app-dropdown-menu li {
+        padding: 12px;
+        font-size: 14px;
+      }
+
+      /* --- Radios: tighter horizontal gap so
+              Sí / Un poco / No fits on a 320 px screen --- */
+      .checkbox-group { gap: 14px; }
+      .checkbox-list label {
+        font-size: 15px;
+        padding: 4px 0;
+      }
+      .checkbox-list input[type="radio"] {
+        width: 22px; height: 22px;
+      }
+
+      /* --- Buttons: full-width, comfortable tap height --- */
+      .generar-btn {
+        width: 100%;
+        padding: 16px 24px;
+        font-size: 16px;
+      }
+
+      /* --- Threshold bars: tighter font so longer labels
+              ("16 min–1 h") wrap inside 60‑px segments --- */
+      .threshold-bar { gap: 3px; }
+      .segment {
+        padding: 22px 4px;
+        font-size: 10.5px;
+        line-height: 1.15;
+        white-space: normal;
+        letter-spacing: 0;
+      }
+
+      /* --- Bar chart: smaller values so "≈ amarilla" fits --- */
+      .bar-chart {
+        height: 130px;
+        gap: 10px;
+        padding: 4px 2px 0;
+      }
+      .bar-value     { font-size: 11px; }
+      .bar-name      { font-size: 9.5px; letter-spacing: 1px; }
+      .bar-chart-msg { font-size: 13px; }
+
+      /* --- Notification cards / empty state --- */
+      .notif-card  { padding: 14px 16px; }
+      .notif-empty { font-size: 13.5px; }
+
+      /* --- Subheads --- */
+      .result-subhead {
+        margin: 4px 0 -2px;
+        font-size: 11px;
+        letter-spacing: 1.2px;
+      }
+    }
+
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
         animation-duration: 0.01ms !important;
@@ -962,6 +1167,39 @@
   </style>
 </head>
 <body data-view="home">
+  <div class="drawer-overlay" id="drawerOverlay" aria-hidden="true"></div>
+  <header class="mobile-topbar">
+    <button type="button" class="hamburger-btn" id="hamburgerBtn"
+            aria-label="Abrir menú" aria-expanded="false" title="Menú">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+           aria-hidden="true">
+        <line x1="3" y1="6"  x2="21" y2="6"></line>
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+    </button>
+    <div class="topbar-title">Un Respiro</div>
+    <button type="button" class="bell-btn" id="bellBtn"
+            data-state="off"
+            aria-label="Activar notificaciones"
+            title="Activar notificaciones">
+      <svg class="bell-icon bell-off" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="1.8"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M6 8 a6 6 0 0 1 12 0 c0 7 3 9 3 9 H3 s3 -2 3 -9"/>
+        <path d="M10.3 21 a1.94 1.94 0 0 0 3.4 0"/>
+        <line x1="2" y1="2" x2="22" y2="22" stroke="#ef4444"
+              stroke-width="2.4"/>
+      </svg>
+      <svg class="bell-icon bell-on" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="1.8"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M6 8 a6 6 0 0 1 12 0 c0 7 3 9 3 9 H3 s3 -2 3 -9"/>
+        <path d="M10.3 21 a1.94 1.94 0 0 0 3.4 0"/>
+      </svg>
+    </button>
+  </header>
   <aside class="sidebar" id="sidebar">
     <button
       class="toggle-btn"
@@ -1062,26 +1300,6 @@
       </label>
     </nav>
   </aside>
-
-  <button type="button" class="bell-btn" id="bellBtn"
-          data-state="off"
-          aria-label="Activar notificaciones"
-          title="Activar notificaciones">
-    <svg class="bell-icon bell-off" viewBox="0 0 24 24" fill="none"
-         stroke="currentColor" stroke-width="1.8"
-         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M6 8 a6 6 0 0 1 12 0 c0 7 3 9 3 9 H3 s3 -2 3 -9"/>
-      <path d="M10.3 21 a1.94 1.94 0 0 0 3.4 0"/>
-      <line x1="2" y1="2" x2="22" y2="22" stroke="#ef4444"
-            stroke-width="2.4"/>
-    </svg>
-    <svg class="bell-icon bell-on" viewBox="0 0 24 24" fill="none"
-         stroke="currentColor" stroke-width="1.8"
-         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M6 8 a6 6 0 0 1 12 0 c0 7 3 9 3 9 H3 s3 -2 3 -9"/>
-      <path d="M10.3 21 a1.94 1.94 0 0 0 3.4 0"/>
-    </svg>
-  </button>
 
   <main class="main">
     <section class="view view-home" aria-label="Inicio">
@@ -1611,11 +1829,63 @@
       }
     });
 
-    // ----- Sidebar collapse -----
+    // ----- Sidebar: collapse on desktop, slide‑in drawer on mobile -----
+    const mqMobile     = window.matchMedia('(max-width: 767px)');
+    const hamburgerBtn = document.getElementById('hamburgerBtn');
+    const drawerOverlay = document.getElementById('drawerOverlay');
+    const mainEl       = document.querySelector('.main');
+    function isMobile() { return mqMobile.matches; }
+    function setDrawerOpen(open) {
+      sidebar.classList.toggle('open', open);
+      if (drawerOverlay) drawerOverlay.classList.toggle('open', open);
+      if (hamburgerBtn) hamburgerBtn.setAttribute('aria-expanded', String(open));
+      // Hide the underlying main view from screen readers while the
+      // drawer is open so they don't read background content.
+      if (mainEl) mainEl.setAttribute('aria-hidden', open ? 'true' : 'false');
+      if (drawerOverlay) drawerOverlay.setAttribute('aria-hidden', open ? 'false' : 'true');
+    }
+
+    if (hamburgerBtn) {
+      hamburgerBtn.addEventListener('click', () => setDrawerOpen(true));
+    }
+    if (drawerOverlay) {
+      drawerOverlay.addEventListener('click', () => setDrawerOpen(false));
+    }
+    // Escape closes the drawer — standard modal affordance.
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && sidebar.classList.contains('open')) {
+        setDrawerOpen(false);
+        if (hamburgerBtn) hamburgerBtn.focus({ preventScroll: true });
+      }
+    });
+
     toggleBtn.addEventListener('click', () => {
+      if (isMobile()) {
+        // On mobile the chevron inside the drawer is only reachable
+        // when the drawer is already open, so it doubles as "close".
+        setDrawerOpen(false);
+        return;
+      }
       const isCollapsed = sidebar.classList.toggle('collapsed');
       toggleBtn.setAttribute('aria-expanded', String(!isCollapsed));
     });
+
+    // Reconcile state when the viewport crosses the breakpoint so we
+    // never end up with a "collapsed" sidebar on mobile (which means
+    // different things in the two layouts) or an "open" drawer on
+    // desktop (which has no visual effect there anyway, but cleaner).
+    function onBreakpointChange(e) {
+      if (e.matches) {
+        sidebar.classList.remove('collapsed');
+        setDrawerOpen(false);
+      } else {
+        sidebar.classList.remove('open');
+        if (drawerOverlay) drawerOverlay.classList.remove('open');
+        if (mainEl) mainEl.setAttribute('aria-hidden', 'false');
+      }
+    }
+    if (mqMobile.addEventListener) mqMobile.addEventListener('change', onBreakpointChange);
+    else if (mqMobile.addListener)  mqMobile.addListener(onBreakpointChange);
 
     // ----- View navigation -----
     const navItems = document.querySelectorAll('.nav-item[data-target]');
@@ -1636,9 +1906,14 @@
     }
 
     // <button> elements fire click on Enter / Space natively,
-    // so no extra keydown handler is needed here.
+    // so no extra keydown handler is needed here. On mobile we close
+    // the drawer after the view switch so the destination view is
+    // visible immediately (matches native navigation patterns).
     navItems.forEach((item) => {
-      item.addEventListener('click', () => setView(item.dataset.target));
+      item.addEventListener('click', () => {
+        setView(item.dataset.target);
+        if (isMobile()) setDrawerOpen(false);
+      });
     });
 
     // ----- Generar Ficha (mocked AI) -----

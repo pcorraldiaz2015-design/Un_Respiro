@@ -506,6 +506,36 @@
       overflow: hidden;
       display: block;
     }
+    /* --- Free-text app picker: sits directly under the dropdown.
+           Typing here overrides any dropdown selection so the typed
+           string becomes the active app value at export time. The
+           placeholder "especificar opción" reads as a tiny empty
+           slot, matching the visual rhythm of the dropdown above. --- */
+    .app-custom-input {
+      appearance: none;
+      -webkit-appearance: none;
+      border: none;
+      border-bottom: 1.5px solid #c8c8c8;
+      background: transparent;
+      font: inherit;
+      font-size: 14px;
+      padding: 6px 4px;
+      margin-top: 8px;
+      color: #1a1a1a;
+      outline: none;
+      border-radius: 0;
+      width: 100%;
+      letter-spacing: 0.1px;
+      transition: border-color 200ms ease;
+    }
+    .app-custom-input::placeholder {
+      color: #9ca3af;
+      font-size: 13px;
+      font-style: italic;
+    }
+    .app-custom-input:focus {
+      border-bottom-color: #4f6d8a;
+    }
     .checkbox-list {
       border: none;
       padding: 0;
@@ -1547,6 +1577,10 @@
               </li>
             </ul>
           </div>
+          <input type="text" class="app-custom-input" id="appCustomInput"
+                 placeholder="especificar opción"
+                 aria-label="Especificar el nombre de la app si no está en la lista"
+                 autocomplete="off">
         </div>
         <div class="question">
           <label for="ficha-tiempo">2) Selecciona el tiempo</label>
@@ -2029,6 +2063,7 @@
     const appDropdownMenu    = document.getElementById('appDropdownMenu');
     const appDropdownLabel   = appDropdownTrigger.querySelector('.app-dropdown-label');
     const appDropdownOptions = appDropdownMenu.querySelectorAll('li[role="option"]');
+    const appCustomInput     = document.getElementById('appCustomInput');
     let appValue = '';
 
     function setAppValue(value) {
@@ -2063,10 +2098,39 @@
       li.addEventListener('click', (e) => {
         e.stopPropagation();
         setAppValue(li.dataset.value);
+        // Picking from the dropdown is mutually exclusive with the
+        // free-text input: clear it so the next export uses the
+        // selected option, not stale text the user left around.
+        if (appCustomInput) appCustomInput.value = '';
         appDropdown.dataset.open = 'false';
         appDropdownTrigger.setAttribute('aria-expanded', 'false');
       });
     });
+
+    // ----- Free-text app picker -----
+    // Typing here sets appValue to the typed string (trimmed), updates
+    // the dropdown trigger label so the user sees what they typed
+    // there too, and deselects any active dropdown option so the two
+    // selection modes stay exclusive. isFormComplete() already keys on
+    // appValue, so the form is "ready to generate" the moment the user
+    // types anything into this small box, and the PNG exporter picks
+    // up `app = appValue || 'Sin app'` automatically.
+    if (appCustomInput) {
+      appCustomInput.addEventListener('input', () => {
+        const v = appCustomInput.value.trim();
+        appValue = v;
+        if (v) {
+          appDropdownLabel.textContent = v;
+          appDropdownTrigger.classList.remove('is-empty');
+          appDropdownOptions.forEach((li) => li.classList.remove('is-selected'));
+        } else {
+          appDropdownLabel.textContent = 'Selecciona una app…';
+          appDropdownTrigger.classList.add('is-empty');
+          appDropdownOptions.forEach((li) => li.classList.remove('is-selected'));
+        }
+        onInputChange();
+      });
+    }
 
     const ZONE_LABELS = ['azul', 'verde', 'amarilla', 'naranja', 'roja'];
     const ADICTION_BY_VALUE = { 'no': 0, 'un-poco': 1, 'si': 2 };

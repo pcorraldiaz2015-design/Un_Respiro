@@ -929,6 +929,60 @@
     .bell-btn[data-state="off"] .bell-off { display: block; }
     .bell-btn[data-state="on"]  .bell-on  { display: block; }
 
+    /* --- Floating refresh button (top-right, next to the bell) --- */
+    .refresh-btn {
+      position: fixed;
+      top: 18px;
+      /* Right edge sits 24 + 44 + 10 = 78 px from the viewport,
+         leaving a 10 px gap to the left of the bell (which is at
+         right: 24 px and 44 px wide). */
+      right: 78px;
+      z-index: 50;
+      width: 44px;
+      height: 44px;
+      padding: 0;
+      background: transparent;
+      border: 1px solid color-mix(in srgb, var(--text) 18%, transparent);
+      border-radius: 12px;
+      color: color-mix(in srgb, var(--text) 92%, transparent);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      appearance: none;
+      -webkit-appearance: none;
+      transition: background-color 200ms ease, border-color 200ms ease,
+                  transform 160ms ease;
+    }
+    .refresh-btn:hover {
+      background-color: color-mix(in srgb, var(--text) 8%, transparent);
+      border-color: color-mix(in srgb, var(--text) 32%, transparent);
+    }
+    .refresh-btn:active { transform: scale(0.94); }
+    .refresh-btn:focus-visible {
+      outline: 2px solid #93c5fd;
+      outline-offset: 3px;
+    }
+    .refresh-btn:disabled {
+      cursor: progress;
+      opacity: 0.7;
+    }
+    .refresh-icon {
+      width: 22px;
+      height: 22px;
+      display: block;
+    }
+    /* Spin feedback while we're about to cache-bust and reload. The
+       JS adds .is-spinning for ~480 ms before navigating away. */
+    .refresh-btn.is-spinning .refresh-icon {
+      animation: refreshSpin 700ms cubic-bezier(0.4, 0, 0.2, 1);
+      transform-origin: center;
+    }
+    @keyframes refreshSpin {
+      from { transform: rotate(0deg);  }
+      to   { transform: rotate(360deg); }
+    }
+
     /* --- Notificaciones view --- */
     body[data-view="notif"] .view-notif {
       display: flex;
@@ -1090,9 +1144,10 @@
         font-weight: 500;
         color: var(--text);
         letter-spacing: 0.3px;
-        /* Compensate for the fixed-width hamburger + bell siblings so
-           the title is perfectly centred instead of biased right. */
-        padding-right: 44px;
+        /* Compensate for the fixed-width hamburger + bell + refresh
+           siblings so the title stays centred between hamburger-right
+           and bell-left. (44 hamburger + 88 right buttons). */
+        padding-right: 88px;
         margin-left: -44px;
       }
 
@@ -1104,6 +1159,13 @@
         border-radius: 10px;
         border: 1px solid color-mix(in srgb, var(--text) 18%, transparent);
         color: color-mix(in srgb, var(--text) 92%, transparent);
+      }
+      /* --- Refresh button sitting inside the topbar
+              (same `position: static` override as the bell). --- */
+      .refresh-btn {
+        position: static;
+        width: 44px; height: 44px;
+        border-radius: 10px;
       }
 
       /* --- Sidebar becomes a slide‑in drawer --- */
@@ -1282,6 +1344,15 @@
            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M6 8 a6 6 0 0 1 12 0 c0 7 3 9 3 9 H3 s3 -2 3 -9"/>
         <path d="M10.3 21 a1.94 1.94 0 0 0 3.4 0"/>
+      </svg>
+    </button>
+    <button type="button" class="refresh-btn" id="refreshBtn"
+            aria-label="Actualizar la app" title="Actualizar la app">
+      <svg class="refresh-icon" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="1.8"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <polyline points="23 4 23 10 17 10"/>
+        <path d="M20.49 15a9 9 0 1 1 -2.12 -9.36L 23 10"/>
       </svg>
     </button>
   </header>
@@ -1950,6 +2021,33 @@
       notifClearBtn.addEventListener('click', () => {
         writeNotifLog([]);
         renderNotifView();
+      });
+    }
+
+    // ----- Refresh button: spin, then cache-bust + reload -----
+    // The `_v` query-param is a unique timestamp per click, which
+    // forces the browser to refetch every resource (rather than
+    // serving whatever is in HTTP cache). Combined with
+    // `location.replace`, this satisfies "look for something new in
+    // cache and update the app": any updated files on the server
+    // overwrite the cached versions on reload.
+    const refreshBtn = document.getElementById('refreshBtn');
+    if (refreshBtn) {
+      let refreshing = false;
+      refreshBtn.addEventListener('click', () => {
+        if (refreshing) return;
+        refreshing = true;
+        refreshBtn.disabled = true;
+        refreshBtn.classList.add('is-spinning');
+        // Brief delay so the user sees the spin start before the
+        // page navigates; the animation itself is 700 ms but we
+        // cut in at ~480 ms so they're already convinced something
+        // is happening before the URL bar repaints.
+        setTimeout(() => {
+          const url = new URL(location.href);
+          url.searchParams.set('_v', Date.now().toString());
+          location.replace(url.href);
+        }, 480);
       });
     }
 

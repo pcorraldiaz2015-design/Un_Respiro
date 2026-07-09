@@ -6,8 +6,21 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="Un Respiro" />
-  <link rel="apple-touch-icon" href="logo.jpeg" />
-  <link rel="apple-touch-startup-image" href="logo.jpeg" />
+  <!--
+    iPhone home-screen icon & splash screen.
+    The filename casing must EXACTLY match Logo.jpeg on disk — Windows
+    NTFS is case-insensitive so it works locally, but a case-sensitive
+    Linux server (which most hosts use) would 404 on lowercase href.
+    `sizes="180x180"` tells iOS that the asset is already pre-sized for
+    modern iPhone @3x home-screen icons, so Safari won't apply its
+    legacy rounded-corner / gloss treatment on top of the artwork.
+    NOTE: iOS renders startup images best as PNG; the .jpeg fallback
+    below may show as a blank white flash on some devices, but the
+    home-screen icon (<link rel="apple-touch-icon"> above) renders
+    the logo correctly across the board.
+  -->
+  <link rel="apple-touch-icon" href="Logo.jpeg" sizes="180x180" />
+  <link rel="apple-touch-startup-image" href="Logo.jpeg" />
   <title>Hola, tiempo de desconectar</title>
   <script>
     // Resolve theme before paint to avoid flash of wrong palette.

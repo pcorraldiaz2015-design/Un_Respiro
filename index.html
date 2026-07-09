@@ -1,0 +1,2368 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Un Respiro" />
+  <link rel="apple-touch-icon" href="logo.jpeg" />
+  <link rel="apple-touch-startup-image" href="logo.jpeg" />
+  <title>Hola, tiempo de desconectar</title>
+  <script>
+    // Resolve theme before paint to avoid flash of wrong palette.
+    (function () {
+      try {
+        const stored = localStorage.getItem('theme');
+        if (stored === 'light' || stored === 'dark') {
+          document.documentElement.setAttribute('data-theme', stored);
+          return;
+        }
+        const prefersLight =
+          window.matchMedia &&
+          window.matchMedia('(prefers-color-scheme: light)').matches;
+        document.documentElement.setAttribute(
+          'data-theme',
+          prefersLight ? 'light' : 'dark'
+        );
+      } catch (_) { /* ignore */ }
+    })();
+  </script>
+  <style>
+    /* --- Theme: dark (default) --- */
+    :root,
+    [data-theme="dark"] {
+      --bg-main: #1f1f1f;
+      --bg-sidebar: #2e2e2e;
+      --bg-sidebar-hover: #383838;
+      --text: #ffffff;
+      --text-muted: #b8b8b8;
+      --shadow: 2px 0 8px rgba(0, 0, 0, 0.25);
+      --toggle-track-off: #4a4a4a;
+      --toggle-track-on: #4f6d8a;
+      --toggle-knob: #f0f0f0;
+      --toggle-knob-icon: #f0c44a;
+      --spark-color: #fff3b8;
+      --spark-glow: rgba(255, 230, 145, 0.95);
+      --spark-core: rgba(255, 255, 255, 0.9);
+      --sidebar-width: 200px;
+      --sidebar-collapsed: 52px;
+      --transition: 260ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* --- Theme: light --- */
+    [data-theme="light"] {
+      --bg-main: #f5f5f5;
+      --bg-sidebar: #ececec;
+      --bg-sidebar-hover: #dedede;
+      --text: #1a1a1a;
+      --text-muted: #6b6b6b;
+      --shadow: 2px 0 8px rgba(0, 0, 0, 0.08);
+      --toggle-track-off: #c8c8c8;
+      --toggle-track-on: #9bb8d4;
+      --toggle-knob: #ffffff;
+      --toggle-knob-icon: #4f6d8a;
+      --spark-color: #ffb84d;
+      --spark-glow: rgba(255, 196, 90, 0.85);
+      --spark-core: rgba(255, 255, 255, 0.95);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      width: 100%;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        Oxygen, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+      font-weight: 300;
+      letter-spacing: 0.3px;
+      overflow: hidden;
+      transition: background-color var(--transition), color var(--transition);
+    }
+
+    /* --- Sidebar --- */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: var(--sidebar-width);
+      background-color: var(--bg-sidebar);
+      transition: width var(--transition), background-color var(--transition);
+      display: flex;
+      flex-direction: column;
+      padding: 20px 0;
+      z-index: 10;
+      box-shadow: var(--shadow);
+    }
+
+    .sidebar.collapsed {
+      width: var(--sidebar-collapsed);
+    }
+
+    .toggle-btn {
+      align-self: flex-end;
+      margin-right: 14px;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color var(--transition), color var(--transition),
+        transform var(--transition);
+    }
+
+    .toggle-btn:hover {
+      background-color: var(--bg-sidebar-hover);
+      color: var(--text);
+    }
+
+    .toggle-btn:active {
+      transform: scale(0.94);
+    }
+
+    .toggle-btn svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    .sidebar.collapsed .toggle-btn svg {
+      transform: rotate(180deg);
+    }
+
+    .sidebar-content {
+      margin-top: 24px;
+      padding: 0 20px;
+      opacity: 1;
+      transition: opacity var(--transition);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar.collapsed .sidebar-content {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border: none;
+      background: transparent;
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--text-muted);
+      cursor: pointer;
+      text-align: left;
+      width: 100%;
+      border-radius: 6px;
+      appearance: none;
+      -webkit-appearance: none;
+      transition: background-color var(--transition), color var(--transition);
+      white-space: nowrap;
+    }
+
+    .nav-item:hover {
+      background-color: var(--bg-sidebar-hover);
+      color: var(--text);
+    }
+
+    .nav-item svg {
+      width: 22px;
+      height: 22px;
+      flex-shrink: 0;
+    }
+
+    /* --- Theme switcher --- */
+    .theme-switch {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 10px;
+      margin: auto 6px 8px 6px;
+      border-top: 1px solid var(--bg-sidebar-hover);
+      color: var(--text-muted);
+      font-size: 13px;
+      white-space: nowrap;
+      transition: color var(--transition);
+      min-width: 0;          /* allow shrinking inside the 200px sidebar */
+    }
+
+    .theme-switch:hover {
+      color: var(--text);
+    }
+
+    .theme-switch-label {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;   /* graceful truncation if text ever overflows */
+    }
+
+    .theme-switch > svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    .switch {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+
+    .switch input {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      opacity: 0;
+      cursor: pointer;
+      z-index: 2;
+    }
+
+    .switch input:focus-visible {
+      outline: 2px solid var(--text);
+      outline-offset: 4px;
+      border-radius: 999px;
+    }
+
+    .switch .track {
+      position: absolute;
+      inset: 0;
+      background-color: var(--toggle-track-off);
+      border-radius: 999px;
+      transition: background-color var(--transition);
+    }
+
+    .switch .knob {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 18px;
+      height: 18px;
+      background-color: var(--toggle-knob);
+      border-radius: 50%;
+      transition: transform var(--transition),
+        background-color var(--transition);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--toggle-knob-icon);
+    }
+
+    .switch .knob svg {
+      width: 12px;
+      height: 12px;
+      transition: opacity var(--transition), transform var(--transition);
+    }
+
+    /* Light mode active (toggle ON -> light theme) */
+    [data-theme="light"] .switch .track {
+      background-color: var(--toggle-track-on);
+    }
+
+    [data-theme="light"] .switch .knob {
+      transform: translateX(20px);
+      color: var(--toggle-knob-icon);
+    }
+
+    /* Thumb icon swaps based on theme */
+    .icon-sun  { display: none; }
+    .icon-moon { display: block; }
+    [data-theme="light"] .icon-sun  { display: block; }
+    [data-theme="light"] .icon-moon { display: none; }
+
+    /* While in dark mode, clicking the toggle should hint toward "sunrise".
+       Show moon inside knob (current) -> clicking moves it to sun on the right. */
+
+    /* --- Main content --- */
+    .main {
+      position: fixed;
+      top: 0;
+      left: var(--sidebar-width);
+      right: 0;
+      bottom: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: left var(--transition);
+      overflow-y: auto;
+      overflow-x: hidden;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(160, 160, 160, 0.5) transparent;
+    }
+    .main::-webkit-scrollbar          { width: 10px; }
+    .main::-webkit-scrollbar-track    { background: transparent; }
+    .main::-webkit-scrollbar-thumb {
+      background-color: rgba(160, 160, 160, 0.5);
+      border-radius: 8px;
+      border: 2px solid transparent;
+      background-clip: padding-box;
+    }
+    .main::-webkit-scrollbar-thumb:hover {
+      background-color: rgba(160, 160, 160, 0.75);
+    }
+
+    .sidebar.collapsed ~ .main {
+      left: var(--sidebar-collapsed);
+    }
+
+    .greeting {
+      font-size: clamp(54px, 8.5vw, 104px);
+      font-weight: 200;
+      letter-spacing: -0.02em;
+      text-align: center;
+      padding: 0 24px;
+      animation: fadeIn 800ms ease-out;
+    }
+
+    /* --- Views (single-page navigation) --- */
+    .view {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      display: none;
+    }
+    body[data-view="home"]  .view-home {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    body[data-view="ficha"] .view-ficha {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: flex-start;
+      padding: 64px 56px;
+      gap: 24px;
+    }
+
+    .view-heading {
+      color: var(--text);
+      font-size: clamp(26px, 3.2vw, 40px);
+      font-weight: 200;
+      letter-spacing: -0.01em;
+      margin: 0;
+    }
+
+    /* --- Questionnaire card (Ficha) --- */
+    .ficha-card {
+      background: #ffffff;
+      color: #1a1a1a;
+      border-radius: 18px;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.14);
+      padding: 36px 36px;
+      width: 100%;
+      max-width: 640px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+    .question {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .question > label,
+    .question > legend {
+      font-size: 16px;
+      font-weight: 400;
+      color: #1a1a1a;
+      letter-spacing: 0.1px;
+    }
+    .checkbox-list legend {
+      padding: 0;
+      border: 0;
+    }
+    .question input[type="text"] {
+      appearance: none;
+      -webkit-appearance: none;
+      border: none;
+      border-bottom: 1.5px solid #c8c8c8;
+      background: transparent;
+      font: inherit;
+      font-size: 16px;
+      padding: 8px 4px;
+      color: #1a1a1a;
+      outline: none;
+      border-radius: 0;
+      width: 100%;            /* span the writing slot across the card */
+      transition: border-color 200ms ease;
+    }
+    .question input[type="text"]:focus {
+      border-bottom-color: #4f6d8a;
+    }
+    /* --- Custom app dropdown (replaces the native <select>) --- */
+    .app-dropdown { position: relative; width: 100%; }
+    .app-dropdown-trigger {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      width: 100%;
+      appearance: none;
+      -webkit-appearance: none;
+      border: none;
+      border-bottom: 1.5px solid #c8c8c8;
+      background: transparent;
+      font-family: inherit;
+      font-size: 16px;
+      padding: 8px 28px 8px 4px;
+      color: #1a1a1a;
+      outline: none;
+      border-radius: 8px;
+      cursor: pointer;
+      text-align: left;
+      transition: border-color 200ms ease;
+    }
+    .app-dropdown-trigger.is-empty { color: #6b6b6b; }
+    .app-dropdown-trigger:focus-visible {
+      border-bottom-color: #4f6d8a;
+    }
+    .app-dropdown-chevron {
+      width: 14px;
+      height: 14px;
+      color: #6b6b6b;
+      position: absolute;
+      right: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+    }
+    .app-dropdown[data-open="false"] .app-dropdown-menu { display: none; }
+    .app-dropdown[data-open="true"]  .app-dropdown-menu { display: block; }
+    .app-dropdown-menu {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      right: 0;
+      background: #ffffff;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      border-radius: 12px;
+      box-shadow: 0 14px 38px rgba(0, 0, 0, 0.22);
+      list-style: none;
+      margin: 0;
+      padding: 4px;
+      max-height: 220px;
+      overflow-y: auto;
+      z-index: 100;
+    }
+    .app-dropdown-menu li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 5px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      color: #1a1a1a;
+      font-size: 13px;
+      user-select: none;
+      transition: background-color 140ms ease;
+    }
+    .app-dropdown-menu li:hover  { background: rgba(79, 109, 138, 0.12); }
+    .app-dropdown-menu li.is-selected {
+      background: rgba(79, 109, 138, 0.22);
+      box-shadow: inset 2px 0 0 #4f6d8a;
+    }
+    .app-dropdown-menu .app-logo {
+      width: 18px; height: 18px;
+      flex-shrink: 0;
+      border-radius: 4px;
+      overflow: hidden;
+      display: block;
+    }
+    .checkbox-list {
+      border: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .checkbox-group {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+    .checkbox-list label {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 16px;
+      color: #1a1a1a;
+      cursor: pointer;
+      user-select: none;
+    }
+    .checkbox-list input[type="radio"] {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      border: 1.5px solid #b8b8b8;
+      border-radius: 50%;
+      background: #ffffff;
+      cursor: pointer;
+      position: relative;
+      transition: border-color 200ms ease, background-color 200ms ease;
+    }
+    .checkbox-list input[type="radio"]:checked {
+      border-color: #4f6d8a;
+      background: #4f6d8a;
+      box-shadow: inset 0 0 0 3px #ffffff;
+    }
+    .checkbox-list input[type="radio"]:focus-visible {
+      outline: 2px solid #4f6d8a;
+      outline-offset: 2px;
+    }
+
+    /* --- Generar Ficha button --- */
+    .generar-btn {
+      background: #2563eb;
+      color: #ffffff;
+      border: none;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 500;
+      padding: 14px 28px;
+      border-radius: 10px;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      box-shadow: 0 6px 18px rgba(37, 99, 235, 0.35);
+      transition: background-color 220ms ease, transform 160ms ease,
+                  box-shadow 220ms ease;
+      letter-spacing: 0.2px;
+    }
+    .generar-btn:hover {
+      background: #1d4ed8;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 22px rgba(37, 99, 235, 0.45);
+    }
+    .generar-btn:active { transform: translateY(0); }
+    .generar-btn:focus-visible {
+      outline: 2px solid #93c5fd;
+      outline-offset: 3px;
+    }
+    .generar-btn:disabled {
+      background: #9ca3af;
+      color: #ffffff;
+      box-shadow: none;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .generar-btn:disabled:hover {
+      background: #9ca3af;
+      transform: none;
+      box-shadow: none;
+    }
+    .generar-btn:disabled.is-processing {
+      cursor: progress;
+    }
+
+    /* --- Result card --- */
+    .result-card {
+      background: #ffffff;
+      color: #1a1a1a;
+      border-radius: 18px;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.14);
+      padding: 28px 36px;
+      width: 100%;
+      max-width: 640px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      transition: opacity 280ms ease;
+    }
+    .result-card[hidden] { display: none; }
+    .result-card.is-loading { opacity: 0.55; }
+
+    .result-summary {
+      margin: 0;
+      font-size: 16px;
+      color: #1a1a1a;
+      line-height: 1.5;
+    }
+    .result-summary strong {
+      font-weight: 600;
+      color: #1d4ed8;       /* default until a zone is selected */
+    }
+    .result-subhead {
+      margin: 6px 0 -4px;
+      font-size: 12px;
+      color: #6b6b6b;
+      font-weight: 500;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+    }
+    .result-card[data-zone="0"] .result-summary strong { color: #1d4ed8; }  /* azul */
+    .result-card[data-zone="1"] .result-summary strong { color: #047857; }  /* verde */
+    .result-card[data-zone="2"] .result-summary strong { color: #a16207; }  /* amarillo */
+    .result-card[data-zone="3"] .result-summary strong { color: #c2410c; }  /* naranja */
+    .result-card[data-zone="4"] .result-summary strong { color: #b91c1c; }  /* rojo */
+
+    /* --- Threshold bar --- */
+    .threshold-bar {
+      display: flex;
+      gap: 4px;
+      width: 100%;
+      align-items: stretch;
+    }
+    .segment {
+      flex: 1;
+      min-width: 0;
+      padding: 22px 8px;
+      border: none;
+      background: transparent;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      text-align: center;
+      color: rgba(255, 255, 255, 0.92);
+      cursor: default;
+      appearance: none;
+      -webkit-appearance: none;
+      border-radius: 8px;
+      transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1),
+                  box-shadow 280ms ease;
+      transform-origin: center;
+    }
+    .seg-blue   { background: #3b82f6; }
+    .seg-green  { background: #10b981; }
+    .seg-yellow { background: #facc15; color: rgba(0, 0, 0, 0.78); }
+    .seg-orange { background: #fb923c; }
+    .seg-red    { background: #ef4444; }
+
+    .segment.is-active {
+      transform: translateY(-2px) scale(1.12);
+      z-index: 2;
+      box-shadow: 0 0 0 3px #ffffff, 0 8px 20px rgba(0, 0, 0, 0.22);
+    }
+
+    /* --- Summary bar chart (Tiempo / Adicción / Media) --- */
+    .bar-chart {
+      display: flex;
+      gap: 18px;
+      align-items: stretch;
+      width: 100%;
+      height: 150px;
+      padding: 8px 4px 0;
+      margin: 4px 0 6px;
+    }
+    .bar-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 6px;
+      min-width: 0;
+    }
+    .bar-track {
+      flex: 1;
+      width: 100%;
+      background: #f1f1f1;
+      border-radius: 10px;
+      position: relative;
+      overflow: hidden;
+      min-height: 0;
+    }
+    .bar-fill {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 0;
+      border-radius: 6px 6px 10px 10px;
+      transition: height 520ms cubic-bezier(0.22, 1, 0.36, 1),
+                  background-color 360ms ease;
+    }
+    .bar-name {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: #6b6b6b;
+      text-align: center;
+      margin-top: 4px;
+    }
+    .bar-value {
+      font-size: 13px;
+      font-weight: 600;
+      color: #1a1a1a;
+      text-align: center;
+      letter-spacing: 0.2px;
+    }
+    .bar-chart-msg {
+      margin: 4px 0 -2px;
+      font-size: 14px;
+      font-style: italic;
+      text-align: center;
+      color: #1a1a1a;
+      line-height: 1.4;
+      letter-spacing: 0.2px;
+      min-height: 1.4em;
+      transition: color 320ms ease;
+    }
+    .bar-chart-msg[data-zone="0"] { color: #1d4ed8; }  /* azul */
+    .bar-chart-msg[data-zone="1"] { color: #047857; }  /* verde */
+    .bar-chart-msg[data-zone="2"] { color: #a16207; }  /* amarillo */
+    .bar-chart-msg[data-zone="3"] { color: #c2410c; }  /* naranja */
+    .bar-chart-msg[data-zone="4"] { color: #b91c1c; }  /* rojo */
+
+    /* --- Active nav-item --- */
+    .nav-item.is-active {
+      background-color: var(--bg-sidebar-hover);
+      color: var(--text);
+    }
+    .nav-item:focus-visible {
+      outline: 2px solid var(--text);
+      outline-offset: 2px;
+      border-radius: 6px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* --- Theme transition: radial bloom from toggle knob --- */
+    .theme-bloom {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background: var(--bloom-color, #1f1f1f);
+      clip-path: circle(0px at var(--bx, 50%) var(--by, 50%));
+      z-index: 9999;
+      will-change: clip-path;
+      opacity: 1;
+    }
+    .theme-bloom.expand {
+      animation: themeBloom 1100ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+    @keyframes themeBloom {
+      /* Phase 1 (0–55%): radial wipe from toggle to viewport edges.
+         Phase 2 (55–100%): bloom stays full-coverage and fades to 0,
+         so the transition dissolves instead of being yanked out. */
+      0%   { clip-path: circle(0px)     at var(--bx) var(--by)); opacity: 1; }
+      55%  { clip-path: circle(150vmax) at var(--bx) var(--by)); opacity: 1; }
+      100% { clip-path: circle(150vmax) at var(--bx) var(--by)); opacity: 0; }
+    }
+
+    /* Halo pulse — second concentric ring, slightly delayed */
+    .theme-halo {
+      position: fixed;
+      left: var(--bx);
+      top: var(--by);
+      width: 8px;
+      height: 8px;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      pointer-events: none;
+      background: var(--bloom-color, #1f1f1f);
+      z-index: 9998;
+    }
+    .theme-halo.expand {
+      animation: themeHalo 1100ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes themeHalo {
+      0%   { width: 8px;   height: 8px;   opacity: 0.55; }
+      70%  { opacity: 0.18; }
+      100% { width: 360px; height: 360px; opacity: 0; }
+    }
+
+    /* Slight toggle scale kick during transition */
+    .toggle-btn.kicking svg { animation: toggleKick 820ms ease-out; }
+    @keyframes toggleKick {
+      0%   { transform: scale(1)    rotate(0deg);   }
+      35%  { transform: scale(1.18) rotate(-8deg);  }
+      100% { transform: scale(1)    rotate(0deg);   }
+    }
+
+    /* --- Theme transition: sparks (estrellas y chispas) --- */
+    .theme-sparks {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 10000;
+    }
+    .spark {
+      position: absolute;
+      left: var(--bx);
+      top: var(--by);
+      width: var(--size, 6px);
+      height: var(--size, 6px);
+      margin-left: calc(var(--size, 6px) / -2);
+      margin-top:  calc(var(--size, 6px) / -2);
+      opacity: 0;
+      filter: drop-shadow(0 0 6px var(--spark-glow))
+              drop-shadow(0 0 1px var(--spark-core));
+      animation: sparkOut var(--dur, 1000ms) cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      animation-delay: var(--delay, 0ms);
+      transform-origin: center;
+      will-change: transform, opacity;
+    }
+    .spark.spark-dot {
+      border-radius: 50%;
+      background: var(--spark-color, #fff3b8);
+    }
+    .spark.spark-star {
+      color: var(--spark-color, #fff3b8);
+      animation-name: starOut;
+    }
+    .spark.spark-star svg {
+      width: 100%; height: 100%; display: block;
+    }
+    @keyframes sparkOut {
+      0%   { opacity: 0; transform: translate(0,0)              scale(0.3); }
+      18%  { opacity: 1; }
+      100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1.15); }
+    }
+    @keyframes starOut {
+      0%   { opacity: 0; transform: translate(0,0)              scale(0.35) rotate(0deg); }
+      18%  { opacity: 1; }
+      100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1)    rotate(140deg); }
+    }
+
+    /* --- Floating bell button (top-right; toggle browser notifications) --- */
+    .bell-btn {
+      position: fixed;
+      top: 18px;
+      right: 24px;
+      z-index: 50;
+      width: 44px;
+      height: 44px;
+      padding: 0;
+      background: transparent;
+      border: 1px solid color-mix(in srgb, var(--text) 18%, transparent);
+      border-radius: 12px;
+      color: color-mix(in srgb, var(--text) 92%, transparent);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      appearance: none;
+      -webkit-appearance: none;
+      transition: background-color 200ms ease, border-color 200ms ease,
+                  transform 160ms ease;
+    }
+    .bell-btn:hover {
+      background-color: color-mix(in srgb, var(--text) 8%, transparent);
+      border-color: color-mix(in srgb, var(--text) 32%, transparent);
+    }
+    .bell-btn:active { transform: scale(0.94); }
+    .bell-btn:focus-visible {
+      outline: 2px solid #93c5fd;
+      outline-offset: 3px;
+    }
+    .bell-icon {
+      width: 22px;
+      height: 22px;
+      display: none;
+    }
+    .bell-btn[data-state="off"] .bell-off { display: block; }
+    .bell-btn[data-state="on"]  .bell-on  { display: block; }
+
+    /* --- Notificaciones view --- */
+    body[data-view="notif"] .view-notif {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: flex-start;
+      padding: 64px 56px;
+      gap: 24px;
+    }
+    .notif-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+      max-width: 640px;
+    }
+    .notif-card {
+      background: #ffffff;
+      color: #1a1a1a;
+      border-radius: 14px;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.14);
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      letter-spacing: 0.1px;
+      animation: fadeIn 320ms ease-out;
+    }
+    .notif-card.is-denied      { border-left: 4px solid #ef4444; }
+    .notif-card.is-unsupported { border-left: 4px solid #94a3b8; opacity: 0.85; }
+    .notif-card.is-error       { border-left: 4px solid #c2410c; }
+    .notif-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .notif-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+    .notif-time {
+      font-size: 11px;
+      color: #6b6b6b;
+      letter-spacing: 0.4px;
+      white-space: nowrap;
+    }
+    .notif-body {
+      font-size: 14px;
+      line-height: 1.45;
+      color: #1a1a1a;
+    }
+    .notif-status {
+      font-size: 12px;
+      color: #6b6b6b;
+      font-style: italic;
+    }
+    .notif-empty {
+      color: var(--text-muted);
+      font-style: italic;
+      font-size: 14px;
+      max-width: 640px;
+      line-height: 1.5;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body data-view="home">
+  <aside class="sidebar" id="sidebar">
+    <button
+      class="toggle-btn"
+      id="toggleBtn"
+      type="button"
+      aria-label="Plegar o desplegar la barra lateral"
+      aria-expanded="true"
+      title="Plegar / desplegar"
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+           aria-hidden="true">
+        <polyline points="15 18 9 12 15 6"></polyline>
+      </svg>
+    </button>
+
+    <nav class="sidebar-content" aria-label="Navegación principal">
+      <button type="button" class="nav-item is-active"
+              data-target="home" aria-current="page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+             aria-hidden="true">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+        <span>Inicio</span>
+      </button>
+      <button type="button" class="nav-item" data-target="ficha">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+             aria-hidden="true">
+          <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+          <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+        </svg>
+        <span>Ficha</span>
+      </button>
+      <button type="button" class="nav-item" data-target="notif">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+             aria-hidden="true">
+          <path d="M6 8 a6 6 0 0 1 12 0 c0 7 3 9 3 9 H3 s3 -2 3 -9"></path>
+          <path d="M10.3 21 a1.94 1.94 0 0 0 3.4 0"></path>
+        </svg>
+        <span>Notificaciones</span>
+      </button>
+      <!-- Theme switcher pinned to the bottom of the sidebar -->
+      <label class="theme-switch" for="themeToggle" title="Cambiar tema">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+             aria-hidden="true">
+          <!-- moon when dark -->
+          <g class="icon-moon">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </g>
+          <!-- sun when light -->
+          <g class="icon-sun">
+            <circle cx="12" cy="12" r="4"></circle>
+            <line x1="12" y1="2"  x2="12" y2="4"></line>
+            <line x1="12" y1="20" x2="12" y2="22"></line>
+            <line x1="4.93" y1="4.93" x2="6.34" y2="6.34"></line>
+            <line x1="17.66" y1="17.66" x2="19.07" y2="19.07"></line>
+            <line x1="2"  y1="12" x2="4"  y2="12"></line>
+            <line x1="20" y1="12" x2="22" y2="12"></line>
+            <line x1="4.93" y1="19.07" x2="6.34" y2="17.66"></line>
+            <line x1="17.66" y1="6.34" x2="19.07" y2="4.93"></line>
+          </g>
+        </svg>
+        <span class="theme-switch-label">Modo claro</span>
+        <span class="switch">
+          <span class="track"></span>
+          <span class="knob">
+            <svg class="icon-moon" viewBox="0 0 24 24" fill="currentColor"
+                 aria-hidden="true">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+            <svg class="icon-sun" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2.4"
+                 stroke-linecap="round" stroke-linejoin="round"
+                 aria-hidden="true">
+              <circle cx="12" cy="12" r="4"></circle>
+              <line x1="12" y1="2"  x2="12" y2="4"></line>
+              <line x1="12" y1="20" x2="12" y2="22"></line>
+              <line x1="4.93" y1="4.93" x2="6.34" y2="6.34"></line>
+              <line x1="17.66" y1="17.66" x2="19.07" y2="19.07"></line>
+              <line x1="2"  y1="12" x2="4"  y2="12"></line>
+              <line x1="20" y1="12" x2="22" y2="12"></line>
+              <line x1="4.93" y1="19.07" x2="6.34" y2="17.66"></line>
+              <line x1="17.66" y1="6.34" x2="19.07" y2="4.93"></line>
+            </svg>
+          </span>
+          <input
+            type="checkbox"
+            id="themeToggle"
+            role="switch"
+            aria-label="Alternar entre modo claro y oscuro"
+          />
+        </span>
+      </label>
+    </nav>
+  </aside>
+
+  <button type="button" class="bell-btn" id="bellBtn"
+          data-state="off"
+          aria-label="Activar notificaciones"
+          title="Activar notificaciones">
+    <svg class="bell-icon bell-off" viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" stroke-width="1.8"
+         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M6 8 a6 6 0 0 1 12 0 c0 7 3 9 3 9 H3 s3 -2 3 -9"/>
+      <path d="M10.3 21 a1.94 1.94 0 0 0 3.4 0"/>
+      <line x1="2" y1="2" x2="22" y2="22" stroke="#ef4444"
+            stroke-width="2.4"/>
+    </svg>
+    <svg class="bell-icon bell-on" viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" stroke-width="1.8"
+         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M6 8 a6 6 0 0 1 12 0 c0 7 3 9 3 9 H3 s3 -2 3 -9"/>
+      <path d="M10.3 21 a1.94 1.94 0 0 0 3.4 0"/>
+    </svg>
+  </button>
+
+  <main class="main">
+    <section class="view view-home" aria-label="Inicio">
+      <h1 class="greeting">Hola, tiempo de desconectar</h1>
+    </section>
+    <section class="view view-ficha" aria-label="Crear ficha">
+      <h1 class="view-heading">Crear una ficha:</h1>
+      <form class="ficha-card" autocomplete="off">
+        <div class="question">
+          <label for="ficha-app">1) Selecciona una app</label>
+          <div class="app-dropdown" id="appDropdown" data-open="false">
+            <button type="button" class="app-dropdown-trigger"
+                    id="appDropdownTrigger" aria-haspopup="listbox"
+                    aria-expanded="false" aria-label="App">
+              <span class="app-dropdown-label">Selecciona una app…</span>
+            </button>
+            <svg class="app-dropdown-chevron" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2.2"
+                 stroke-linecap="round" stroke-linejoin="round"
+                 aria-hidden="true">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+            <ul class="app-dropdown-menu" role="listbox" id="appDropdownMenu">
+              <li role="option" data-value="Instagram" tabindex="-1">
+                <svg class="app-logo" viewBox="0 0 24 24" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="g-ig" x1="0" x2="1" y1="0" y2="1">
+                      <stop offset="0" stop-color="#feda75"/>
+                      <stop offset="0.5" stop-color="#fa7e1e"/>
+                      <stop offset="1" stop-color="#d62976"/>
+                    </linearGradient>
+                  </defs>
+                  <rect x="2.5" y="2.5" width="19" height="19" rx="5" fill="url(#g-ig)"/>
+                  <circle cx="12" cy="12" r="4" fill="none" stroke="#fff" stroke-width="2"/>
+                  <circle cx="17.2" cy="6.8" r="1.3" fill="#fff"/>
+                </svg>
+                <span>Instagram</span>
+              </li>
+              <li role="option" data-value="YouTube" tabindex="-1">
+                <svg class="app-logo" viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="1" y="5" width="22" height="14" rx="3.5" fill="#ff0000"/>
+                  <path d="M10 8.5 L 16 12 L 10 15.5 Z" fill="#fff"/>
+                </svg>
+                <span>YouTube</span>
+              </li>
+              <li role="option" data-value="Threads" tabindex="-1">
+                <svg class="app-logo" viewBox="0 0 24 24" aria-hidden="true">
+                  <rect width="24" height="24" rx="5" fill="#000000"/>
+                  <text x="12" y="12" text-anchor="middle"
+                        dominant-baseline="central"
+                        font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif"
+                        font-size="17" font-weight="700"
+                        fill="#ffffff">@</text>
+                </svg>
+                <span>Threads</span>
+              </li>
+              <li role="option" data-value="Discord" tabindex="-1">
+                <svg class="app-logo" viewBox="0 0 24 24" aria-hidden="true">
+                  <!-- Discord blurple rounded square + two solid white
+                       pill eyes, matching the real Discord mark glyph. -->
+                  <rect width="24" height="24" rx="5.5" fill="#5865F2"/>
+                  <ellipse cx="9"  cy="11" rx="1.9" ry="2.6" fill="#ffffff"/>
+                  <ellipse cx="15" cy="11" rx="1.9" ry="2.6" fill="#ffffff"/>
+                </svg>
+                <span>Discord</span>
+              </li>
+              <li role="option" data-value="Caine" tabindex="-1">
+                <svg class="app-logo" viewBox="0 0 24 24" aria-hidden="true">
+                  <!-- Stylised bee emoji 🐝: yellow rounded body with black
+                       stripes, two white translucent wings, antennae and
+                       a tiny black head — reads as a bee at 22×22. -->
+                  <defs>
+                    <radialGradient id="g-bee" cx="0.5" cy="0.4" r="0.7">
+                      <stop offset="0"   stop-color="#fff7c2"/>
+                      <stop offset="1"   stop-color="#f5b400"/>
+                    </radialGradient>
+                  </defs>
+                  <rect width="24" height="24" rx="5" fill="#fde68a"/>
+                  <!-- wings -->
+                  <ellipse cx="9.5"  cy="7.5" rx="4" ry="2.4"
+                           fill="#ffffff" fill-opacity="0.85"
+                           transform="rotate(-22 9.5 7.5)"/>
+                  <ellipse cx="14.5" cy="7.5" rx="4" ry="2.4"
+                           fill="#ffffff" fill-opacity="0.85"
+                           transform="rotate(22 14.5 7.5)"/>
+                  <!-- body -->
+                  <ellipse cx="12" cy="14" rx="6" ry="5.2"
+                           fill="url(#g-bee)" stroke="#1a1a1a"
+                           stroke-width="0.8"/>
+                  <!-- stripes -->
+                  <path d="M8.2 12.4 Q 12 13.6, 15.8 12.4" stroke="#1a1a1a"
+                        stroke-width="1.4" fill="none" stroke-linecap="round"/>
+                  <path d="M8.6 15.0 Q 12 16.0, 15.4 15.0" stroke="#1a1a1a"
+                        stroke-width="1.4" fill="none" stroke-linecap="round"/>
+                  <!-- antennae (dots sit above the rotated wing silhouette) -->
+                  <path d="M10 9.5 Q 9 8, 7.4 7.1" stroke="#1a1a1a"
+                        stroke-width="0.9" fill="none" stroke-linecap="round"/>
+                  <path d="M14 9.5 Q 15 8, 16.6 7.1" stroke="#1a1a1a"
+                        stroke-width="0.9" fill="none" stroke-linecap="round"/>
+                  <circle cx="7.4"  cy="7.1" r="0.7" fill="#1a1a1a"/>
+                  <circle cx="16.6" cy="7.1" r="0.7" fill="#1a1a1a"/>
+                  <!-- stinger -->
+                  <path d="M12 19 L 11 21 L 13 21 Z" fill="#1a1a1a"/>
+                </svg>
+                <span>Caine</span>
+              </li>
+              <li role="option" data-value="MakerWorld" tabindex="-1">
+                <svg class="app-logo" viewBox="0 0 24 24" aria-hidden="true">
+                  <!-- 3D isometric black cube: top rhombus (lighter),
+                       left face (deepest black), right face (darker
+                       grey) so the edges between faces actually read. -->
+                  <polygon points="12,2.5 21.5,7.5 12,12.5 2.5,7.5" fill="#3a3a3a"/>
+                  <polygon points="2.5,7.5 12,12.5 12,21.5 2.5,16.5" fill="#000000"/>
+                  <polygon points="12,12.5 21.5,7.5 21.5,16.5 12,21.5" fill="#2a2a2a"/>
+                </svg>
+                <span>MakerWorld</span>
+              </li>
+              <li role="option" data-value="Spotify" tabindex="-1">
+                <svg class="app-logo" viewBox="0 0 24 24" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10" fill="#1DB954"/>
+                  <path d="M7 9.5 Q 12 8, 17 11" stroke="#fff" stroke-width="2" stroke-linecap="round" fill="none"/>
+                  <path d="M7.5 12.5 Q 12 11.5, 16.5 14" stroke="#fff" stroke-width="2" stroke-linecap="round" fill="none"/>
+                  <path d="M8 15.5 Q 12 14.5, 15 16.5" stroke="#fff" stroke-width="2" stroke-linecap="round" fill="none"/>
+                </svg>
+                <span>Spotify</span>
+              </li>
+              <li role="option" data-value="AmongUs" tabindex="-1">
+                <svg class="app-logo" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M5 8 C 5 5, 9 4, 12 4 C 15 4, 18 6, 17 10 V 18 H 5 Z" fill="#d63031"/>
+                  <ellipse cx="9" cy="10" rx="2.8" ry="3" fill="#aacfed"/>
+                  <ellipse cx="9" cy="10.3" rx="2.3" ry="2.4" fill="#3d8de4"/>
+                  <rect x="3" y="18" width="3.5" height="3.5" rx="1.5" fill="#d63031"/>
+                  <rect x="8.5" y="19" width="3.5" height="3" rx="1.5" fill="#d63031"/>
+                </svg>
+                <span>AmongUs</span>
+              </li>
+              <li role="option" data-value="Roblox" tabindex="-1">
+                <svg class="app-logo" viewBox="0 0 24 24" aria-hidden="true">
+                  <rect width="24" height="24" fill="#000"/>
+                  <!-- white square rotated 45° (diamond) dead-center -->
+                  <rect x="5" y="5" width="14" height="14"
+                        fill="#ffffff"
+                        transform="rotate(45 12 12)"/>
+                </svg>
+                <span>Roblox</span>
+              </li>
+              <li role="option" data-value="Gemini" tabindex="-1">
+                <svg class="app-logo" viewBox="0 0 24 24" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="g-gemini" x1="0" x2="1" y1="0" y2="1">
+                      <stop offset="0" stop-color="#4285F4"/>
+                      <stop offset="0.5" stop-color="#9b72cb"/>
+                      <stop offset="1" stop-color="#d96570"/>
+                    </linearGradient>
+                  </defs>
+                  <path d="M12 2 L 14.5 9.5 L 22 12 L 14.5 14.5 L 12 22 L 9.5 14.5 L 2 12 L 9.5 9.5 Z"
+                        fill="url(#g-gemini)"/>
+                </svg>
+                <span>Gemini</span>
+              </li>
+              <li role="option" data-value="Claude" tabindex="-1">
+                <svg class="app-logo" viewBox="0 0 24 24" aria-hidden="true">
+                  <!-- Stylised "C" spark mark, evoking the Anthropic Claude brand:
+                       an orange/coral circle with a thick C-shaped cut-out
+                       and a small accent dot. Reads as the Claude brand at small sizes. -->
+                  <defs>
+                    <linearGradient id="g-claude" x1="0" x2="1" y1="0" y2="1">
+                      <stop offset="0" stop-color="#f4a261"/>
+                      <stop offset="1" stop-color="#cc785c"/>
+                    </linearGradient>
+                  </defs>
+                  <circle cx="12" cy="12" r="10" fill="url(#g-claude)"/>
+                  <path d="M15.6 8.3 A 5.4 5.4 0 1 0 15.6 15.7 L 14 14.2 A 3.2 3.2 0 1 1 14 9.8 Z"
+                        fill="#ffffff"/>
+                  <circle cx="16.5" cy="7.5" r="1.2" fill="#ffffff"/>
+                </svg>
+                <span>Claude</span>
+              </li>
+              <li role="option" data-value="Classroom" tabindex="-1">
+                <svg class="app-logo" viewBox="0 0 24 24" aria-hidden="true">
+                  <!-- Yellow rounded-square border + smaller green
+                       rounded square inside; matching rx ratios so
+                       the inner corners track the outer curve cleanly. -->
+                  <rect x="2" y="2" width="20" height="20" rx="6" ry="6"
+                        fill="#facc15"/>
+                  <rect x="4.5" y="4.5" width="15" height="15" rx="4" ry="4"
+                        fill="#16a34a"/>
+                </svg>
+                <span>Classroom</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="question">
+          <label for="ficha-tiempo">2) Selecciona el tiempo</label>
+          <input id="ficha-tiempo" type="text" name="tiempo" placeholder="Ej. 30 minutos">
+        </div>
+        <div class="question">
+          <fieldset class="checkbox-list">
+            <legend>3) Te has sentido adicto hoy a esta app?</legend>
+            <div class="checkbox-group">
+              <label><input type="radio" name="adicto" value="si"> Sí</label>
+              <label><input type="radio" name="adicto" value="un-poco"> Un poco</label>
+              <label><input type="radio" name="adicto" value="no"> No</label>
+            </div>
+          </fieldset>
+        </div>
+      </form>
+
+      <button type="button" class="generar-btn" id="generarBtn"
+              disabled
+              aria-label="Generar ficha con la información introducida">
+        Generar Ficha
+      </button>
+
+      <section class="result-card" id="resultCard" hidden
+               aria-live="polite" aria-label="Resultado del análisis">
+        <p class="result-summary" id="resultSummary">
+          Analizando el tiempo introducido…
+        </p>
+        <div class="threshold-bar" id="timeBar" role="group"
+             aria-label="Zonas de tiempo según uso">
+          <div class="segment seg-blue" data-idx="0"
+               role="img" aria-label="0 a 15 minutos">
+            <span>0–15 min</span>
+          </div>
+          <div class="segment seg-green" data-idx="1"
+               role="img" aria-label="16 minutos a 1 hora">
+            <span>16 min–1 h</span>
+          </div>
+          <div class="segment seg-yellow" data-idx="2"
+               role="img" aria-label="1 hora y 1 minuto a 2 horas">
+            <span>1 h–2 h</span>
+          </div>
+          <div class="segment seg-orange" data-idx="3"
+               role="img" aria-label="2 horas y 1 minuto a 3 horas">
+            <span>2 h–3 h</span>
+          </div>
+          <div class="segment seg-red" data-idx="4"
+               role="img" aria-label="más de 3 horas">
+            <span>+3 h</span>
+          </div>
+        </div>
+
+        <p class="result-subhead">Nivel de adicción</p>
+        <div class="threshold-bar" id="adictoBar" role="group"
+             aria-label="Nivel de adicción según la pregunta 3">
+          <div class="segment seg-green" data-idx="0"
+               role="img" aria-label="Normal">
+            <span>Normal</span>
+          </div>
+          <div class="segment seg-yellow" data-idx="1"
+               role="img" aria-label="Regular">
+            <span>Regular</span>
+          </div>
+          <div class="segment seg-red" data-idx="2"
+               role="img" aria-label="Mal">
+            <span>Mal</span>
+          </div>
+        </div>
+
+        <p class="result-subhead">Resumen</p>
+        <div class="bar-chart" id="barChart" role="group"
+             aria-label="Gráfico resumen: tiempo, adicción y media">
+          <div class="bar-col">
+            <div class="bar-track" aria-hidden="true">
+              <div class="bar-fill" id="barFillTime"></div>
+            </div>
+            <div class="bar-name">Tiempo</div>
+            <div class="bar-value" id="barValueTime">—</div>
+          </div>
+          <div class="bar-col">
+            <div class="bar-track" aria-hidden="true">
+              <div class="bar-fill" id="barFillAdic"></div>
+            </div>
+            <div class="bar-name">Adicción</div>
+            <div class="bar-value" id="barValueAdic">—</div>
+          </div>
+          <div class="bar-col">
+            <div class="bar-track" aria-hidden="true">
+              <div class="bar-fill" id="barFillAvg"></div>
+            </div>
+            <div class="bar-name">Media</div>
+            <div class="bar-value" id="barValueAvg">—</div>
+          </div>
+        </div>
+        <p class="bar-chart-msg" id="barChartMsg" data-zone="0"
+           aria-live="polite"></p>
+      </section>
+
+      <button type="button" class="generar-btn" id="exportarBtn"
+              hidden
+              aria-label="Exportar la ficha como imagen PNG">
+        Exportar
+      </button>
+    </section>
+
+    <section class="view view-notif" aria-label="Notificaciones recibidas">
+      <h1 class="view-heading">Notificaciones</h1>
+      <div id="notifList" class="notif-list" role="list"
+           aria-live="polite"></div>
+      <p class="notif-empty" id="notifEmpty" hidden>
+        Aún no has recibido ninguna notificación. Activa la campana arriba
+        a la derecha para empezar a recibirlas.
+      </p>
+    </section>
+  </main>
+
+  <script>
+    const sidebar       = document.getElementById('sidebar');
+    const toggleBtn     = document.getElementById('toggleBtn');
+    const themeToggle   = document.getElementById('themeToggle');
+    const THEME_KEY     = 'theme';
+    const labelEl       = document.querySelector('.theme-switch-label');
+
+    // Sync UI with whatever the early <script> resolved.
+    const initialTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+    themeToggle.checked = initialTheme === 'light';
+    syncToggleLabel(initialTheme);
+
+    // ----- Notification bell (top-right) -----
+    const bellBtn  = document.getElementById('bellBtn');
+    const NOTIF_KEY = 'notifGranted';
+    function readNotifStored() {
+      try { return localStorage.getItem(NOTIF_KEY); } catch (_) { return null; }
+    }
+    function writeNotifStored(v) {
+      try { localStorage.setItem(NOTIF_KEY, v); } catch (_) { /* ignore */ }
+    }
+
+    // ----- Notif log: every notification we tried to send ----- //
+    const NOTIF_LOG_KEY = 'notifLog';
+    const NOTIF_LOG_MAX = 50;
+    function readNotifLog() {
+      try {
+        const raw = localStorage.getItem(NOTIF_LOG_KEY);
+        if (!raw) return [];
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (_) { return []; }
+    }
+    function writeNotifLog(log) {
+      try {
+        localStorage.setItem(
+          NOTIF_LOG_KEY,
+          JSON.stringify(log.slice(0, NOTIF_LOG_MAX))
+        );
+      } catch (_) { /* ignore */ }
+    }
+    function pushNotifEntry(entry) {
+      const log = readNotifLog();
+      log.unshift(entry);          // newest first
+      writeNotifLog(log);
+      renderNotifView();
+    }
+    function makeNotifId() {
+      return 'n' + Date.now().toString(36) +
+             Math.random().toString(36).slice(2, 6);
+    }
+    // Single source of truth for the welcome chime text used by every
+    // bell-click branch (granted / denied / unsupported) and any future
+    // weekly-report notif — keep the copy here so it can never drift.
+    const WELCOME_TITLE = 'Un Respiro';
+    const WELCOME_BODY  =
+      'Hola! Gracias por activar las notificaciones. ';
+    /**
+     * Send a browser notification AND record the attempt in the notif log
+     * (received / denied / unsupported / error). Every notification we
+     * ever fire goes through here so the Notificaciones view always
+     * matches reality, including the welcome chime on bell activation.
+     */
+    function sendNotif(title, opts) {
+      opts = opts || {};
+      const entry = {
+        id:    makeNotifId(),
+        title: title || 'Un Respiro',
+        body:  opts.body || '',
+        ts:    new Date().toISOString()
+      };
+      if (typeof Notification === 'undefined') {
+        entry.status = 'unsupported';
+        pushNotifEntry(entry);
+        return null;
+      }
+      if (Notification.permission !== 'granted') {
+        entry.status = 'denied';
+        pushNotifEntry(entry);
+        return null;
+      }
+      try {
+        new Notification(entry.title, opts);
+        entry.status = 'received';
+        pushNotifEntry(entry);
+      } catch (err) {
+        entry.status = 'error';
+        pushNotifEntry(entry);
+      }
+      return null;
+    }
+    function formatRelativeNotif(ts) {
+      try {
+        const d     = new Date(ts);
+        const diffMs = Date.now() - d.getTime();
+        const min   = Math.floor(diffMs / 60000);
+        if (min < 1)  return 'Justo ahora';
+        if (min < 60) return 'hace ' + min + ' min';
+        const hr = Math.floor(min / 60);
+        if (hr < 24)  return 'hace ' + hr + ' h';
+        const day = Math.floor(hr / 24);
+        if (day < 7)  return 'hace ' + day + ' d';
+        return d.toLocaleDateString(
+          'es-ES', { day: 'numeric', month: 'short', year: 'numeric' }
+        );
+      } catch (_) { return ts; }
+    }
+    function notifStatusLabel(status) {
+      switch (status) {
+        case 'received':    return 'Recibida';
+        case 'denied':      return 'Bloqueada por el navegador';
+        case 'unsupported': return 'Tu navegador no soporta notificaciones';
+        case 'error':       return 'Error al enviar la notificación';
+        default:            return status;
+      }
+    }
+    function renderNotifView() {
+      const list  = document.getElementById('notifList');
+      if (!list) return;
+      const empty = document.getElementById('notifEmpty');
+      const log   = readNotifLog();
+      list.innerHTML = '';
+      if (log.length === 0) {
+        if (empty) empty.hidden = false;
+        return;
+      }
+      if (empty) empty.hidden = true;
+      log.forEach((entry) => {
+        const card = document.createElement('div');
+        card.className = 'notif-card';
+        card.setAttribute('role', 'listitem');
+        if (entry.status && entry.status !== 'received') {
+          card.classList.add('is-' + entry.status);
+        }
+        const head  = document.createElement('div');
+        head.className = 'notif-head';
+        const title = document.createElement('div');
+        title.className   = 'notif-title';
+        title.textContent = entry.title || 'Un Respiro';
+        const time  = document.createElement('div');
+        time.className   = 'notif-time';
+        time.textContent = formatRelativeNotif(entry.ts);
+        head.appendChild(title);
+        head.appendChild(time);
+        card.appendChild(head);
+        if (entry.body) {
+          const body = document.createElement('div');
+          body.className   = 'notif-body';
+          body.textContent = entry.body;
+          card.appendChild(body);
+        }
+        if (entry.status && entry.status !== 'received') {
+          const status = document.createElement('div');
+          status.className   = 'notif-status';
+          status.textContent = notifStatusLabel(entry.status);
+          card.appendChild(status);
+        }
+        list.appendChild(card);
+      });
+    }
+
+    function applyBellState(state) {
+      bellBtn.dataset.state = state;
+      const label = (state === 'on')
+        ? 'Notificaciones activadas'
+        : 'Activar notificaciones';
+      bellBtn.setAttribute('aria-label', label);
+      bellBtn.setAttribute('title', label);
+    }
+    // Initial state: granted only if the browser says so AND we have a
+    // persisted "1" token from a previous consent click.
+    if (typeof Notification !== 'undefined' &&
+        Notification.permission === 'granted' &&
+        readNotifStored() === '1') {
+      applyBellState('on');
+    } else {
+      applyBellState('off');
+    }
+    bellBtn.addEventListener('click', async () => {
+      if (typeof Notification === 'undefined') {
+        // Browser doesn't expose the notifications API at all — still
+        // funnel through sendNotif so the Notificaciones view records
+        // the attempt as 'unsupported' instead of leaving it blank.
+        applyBellState('off');
+        sendNotif(WELCOME_TITLE, { body: WELCOME_BODY, silent: true });
+        return;
+      }
+      if (Notification.permission === 'granted') {
+        writeNotifStored('1');
+        applyBellState('on');
+        return;
+      }
+      try {
+        const result = await Notification.requestPermission();
+        if (result === 'granted') {
+          writeNotifStored('1');
+          applyBellState('on');
+          // Defer the notification to the next event-loop tick so
+          // it's outside the click handler's user-gesture window:
+          // Chrome on file:// / localhost often silently drops a
+          // Notification constructed synchronously here, and on
+          // some platforms the OS notification subsystem simply
+          // doesn't pick it up before the gesture ends. Wrapping
+          // in setTimeout(0) is the standard workaround.
+          window.setTimeout(() => {
+            sendNotif(WELCOME_TITLE, { body: WELCOME_BODY, silent: true });
+          }, 0);
+        } else {
+          writeNotifStored('0');
+          applyBellState('off');
+          // No OS notif fires (permission isn't granted) but
+          // sendNotif records the attempt as 'denied' so the
+          // Notificaciones view explains what happened to the
+          // welcome chime the user expected to see.
+          sendNotif(WELCOME_TITLE, { body: WELCOME_BODY, silent: true });
+        }
+      } catch (err) {
+        console.warn('Notification permission request failed:', err);
+      }
+    });
+
+    // ----- Sidebar collapse -----
+    toggleBtn.addEventListener('click', () => {
+      const isCollapsed = sidebar.classList.toggle('collapsed');
+      toggleBtn.setAttribute('aria-expanded', String(!isCollapsed));
+    });
+
+    // ----- View navigation -----
+    const navItems = document.querySelectorAll('.nav-item[data-target]');
+
+    function setView(view) {
+      if (!view) return;
+      document.body.dataset.view = view;
+      navItems.forEach((item) => {
+        const isActive = item.dataset.target === view;
+        item.classList.toggle('is-active', isActive);
+        if (isActive) {
+          item.setAttribute('aria-current', 'page');
+        } else {
+          item.removeAttribute('aria-current');
+        }
+      });
+      if (view === 'notif') renderNotifView();
+    }
+
+    // <button> elements fire click on Enter / Space natively,
+    // so no extra keydown handler is needed here.
+    navItems.forEach((item) => {
+      item.addEventListener('click', () => setView(item.dataset.target));
+    });
+
+    // ----- Generar Ficha (mocked AI) -----
+    const generarBtn     = document.getElementById('generarBtn');
+    const resultCard     = document.getElementById('resultCard');
+    const resultSummary  = document.getElementById('resultSummary');
+    const tiempoInput    = document.getElementById('ficha-tiempo');
+    const adictoRadios   = document.querySelectorAll('input[name="adicto"]');
+    const segments          = document.querySelectorAll('#timeBar .segment');
+    const adictoBarSegments = document.querySelectorAll('#adictoBar .segment');
+    const exportarBtn    = document.getElementById('exportarBtn');
+    const barFillTime       = document.getElementById('barFillTime');
+    const barFillAdic       = document.getElementById('barFillAdic');
+    const barFillAvg        = document.getElementById('barFillAvg');
+    const barValueTime      = document.getElementById('barValueTime');
+    const barValueAdic      = document.getElementById('barValueAdic');
+    const barValueAvg       = document.getElementById('barValueAvg');
+    const barChartMsg       = document.getElementById('barChartMsg');
+
+    // ----- Custom app dropdown state -----
+    const appDropdown        = document.getElementById('appDropdown');
+    const appDropdownTrigger = document.getElementById('appDropdownTrigger');
+    const appDropdownMenu    = document.getElementById('appDropdownMenu');
+    const appDropdownLabel   = appDropdownTrigger.querySelector('.app-dropdown-label');
+    const appDropdownOptions = appDropdownMenu.querySelectorAll('li[role="option"]');
+    let appValue = '';
+
+    function setAppValue(value) {
+      appValue = value;
+      if (value) {
+        appDropdownLabel.textContent = value;
+        appDropdownTrigger.classList.remove('is-empty');
+        appDropdownOptions.forEach((li) => {
+          li.classList.toggle('is-selected', li.dataset.value === value);
+        });
+      } else {
+        appDropdownLabel.textContent = 'Selecciona una app…';
+        appDropdownTrigger.classList.add('is-empty');
+        appDropdownOptions.forEach((li) => li.classList.remove('is-selected'));
+      }
+      onInputChange();
+    }
+
+    appDropdownTrigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const open = appDropdown.dataset.open === 'true';
+      appDropdown.dataset.open = open ? 'false' : 'true';
+      appDropdownTrigger.setAttribute('aria-expanded', String(!open));
+    });
+    document.addEventListener('click', (e) => {
+      if (appDropdown && !appDropdown.contains(e.target)) {
+        appDropdown.dataset.open = 'false';
+        appDropdownTrigger.setAttribute('aria-expanded', 'false');
+      }
+    });
+    appDropdownOptions.forEach((li) => {
+      li.addEventListener('click', (e) => {
+        e.stopPropagation();
+        setAppValue(li.dataset.value);
+        appDropdown.dataset.open = 'false';
+        appDropdownTrigger.setAttribute('aria-expanded', 'false');
+      });
+    });
+
+    const ZONE_LABELS = ['azul', 'verde', 'amarilla', 'naranja', 'roja'];
+    const ADICTION_BY_VALUE = { 'no': 0, 'un-poco': 1, 'si': 2 };
+    const ZONE_TIME_COLORS = ['#3b82f6', '#10b981', '#facc15', '#fb923c', '#ef4444'];
+    const ZONE_ADIC_COLORS = ['#10b981', '#facc15', '#ef4444'];
+    const ADIC_LABELS      = ['Normal', 'Regular', 'Mal'];
+    const MSG_BY_ZONE      = [
+      'Super bien, puedes utilizar esta app por mucho tiempo todaví',
+      'Muy bien, puedes seguir utilizando esta app',
+      'Puedes estar un rato más',
+      'Deberías dejar esta app dentro de poco',
+      'Lo mejor es que dejes esta app'
+    ];
+
+    /** Mix two #rrggbb hex colors at the midpoint (per-channel average). */
+    function blendHex(a, b) {
+      const ar = parseInt(a.slice(1, 3), 16), ag = parseInt(a.slice(3, 5), 16), ab = parseInt(a.slice(5, 7), 16);
+      const br = parseInt(b.slice(1, 3), 16), bg = parseInt(b.slice(3, 5), 16), bb = parseInt(b.slice(5, 7), 16);
+      const r = Math.round((ar + br) / 2);
+      const g = Math.round((ag + bg) / 2);
+      const bl = Math.round((ab + bb) / 2);
+      const toHex = (n) => n.toString(16).padStart(2, '0');
+      return '#' + toHex(r) + toHex(g) + toHex(bl);
+    }
+
+    /**
+     * Refresh the summary bar chart (Tiempo, Adicción, Media).
+     * Heights are normalised to a 0-100% scale where each metric
+     * stretches to its own max (Tiempo: 5 zones → 0/4..4/4;
+     * Adicción: 3 levels → 0/2..2/2). The Media bar height is the
+     * arithmetic mean of the two, and its colour is the per-channel
+     * blend of the two zone colours so it visually sits between them.
+     */
+    function updateBarChart(timeIdx, adicIdx) {
+      const timeColor = ZONE_TIME_COLORS[timeIdx]    || ZONE_TIME_COLORS[0];
+      const adicColor = ZONE_ADIC_COLORS[adicIdx]    || ZONE_ADIC_COLORS[0];
+      const timePct   = Math.min(Math.max((timeIdx / 4) * 100, 0), 100);
+      const adicPct   = Math.min(Math.max((adicIdx / 2) * 100, 0), 100);
+      const avgPct    = (timePct + adicPct) / 2;
+      const avgIdx    = Math.min(Math.round((avgPct / 100) * 4), 4);
+      // The Media bar uses the SAME discrete zone colour as the
+      // contextual message underneath (driven by avgIdx via
+      // .bar-chart-msg[data-zone="0..4"]), so the bar and the text
+      // phrase always agree visually.
+      const avgColor  = ZONE_TIME_COLORS[avgIdx] || ZONE_TIME_COLORS[0];
+
+      barFillTime.style.background = timeColor;
+      barFillTime.style.height     = timePct + '%';
+      barValueTime.textContent     = ZONE_LABELS[timeIdx];
+
+      barFillAdic.style.background = adicColor;
+      barFillAdic.style.height     = adicPct + '%';
+      barValueAdic.textContent     = ADIC_LABELS[adicIdx];
+
+      barFillAvg.style.background  = avgColor;
+      barFillAvg.style.height      = avgPct + '%';
+      barValueAvg.textContent      = '≈ ' + ZONE_LABELS[avgIdx];
+      barChartMsg.textContent      = MSG_BY_ZONE[avgIdx];
+      barChartMsg.dataset.zone     = String(avgIdx);
+      // Cache the latest generation so the PNG exporter captures the
+      // exact state that was on screen, even if the user has since
+      // touched a field (form is frozen until the next Generate click).
+      lastTimeIdx = timeIdx;
+      lastAdicIdx = adicIdx;
+      lastAvgIdx  = avgIdx;
+    }
+
+    /**
+     * Render the result-card into a PNG and trigger a download.
+     * Uses plain Canvas 2D drawing (no SVG, no foreignObject, no
+     * external libraries) so it works reliably across Chromium builds
+     * without depending on the SVG rasterisation quirks that the
+     * earlier foreignObject approach tripped over.
+     */
+    function exportFichaToPNG() {
+      if (resultCard.hasAttribute('hidden')) return;
+
+      // Snapshot — always read from the cached "last*" variables so the
+      // exporter reflects what the user actually saw on screen, not
+      // whatever the radio says now.
+      const app     = appValue || 'Sin app';
+      const minutes = lastMinutes;
+      const tIdx    = lastTimeIdx;
+      const aIdx    = lastAdicIdx;
+      const vIdx    = lastAvgIdx;
+
+      const timePct = Math.min(Math.max((tIdx / 4) * 100, 0), 100);
+      const adicPct = Math.min(Math.max((aIdx / 2) * 100, 0), 100);
+      const avgPct  = (timePct + adicPct) / 2;
+
+      const W       = 640;
+      const SCALE   = 2;
+      const PAD     = 36;
+
+      const fonts = {
+        header:  '600 28px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        body:    '400 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        bold:    '600 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        seg:     '500 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        sub:     '500 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        barNum:  '600 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        msg:     'italic 500 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      };
+
+      const ZONE_FILLS = ['#3b82f6', '#10b981', '#facc15', '#fb923c', '#ef4444'];
+      const ZONE_INKS  = ['#1d4ed8', '#047857', '#a16207', '#c2410c', '#b91c1c'];
+      const ADIC_FILLS = ['#10b981', '#facc15', '#ef4444'];
+      const TIME_LBLS  = ['0–15 min', '16 min–1 h', '1 h–2 h', '2 h–3 h', '+3 h'];
+
+      // Layout (logical pixels)
+      const GAP_LG  = 22;
+      const GAP_SM  = 14;
+      const HEADER_H  = 38;
+      const SUMMARY_H = 56;
+      const SUBHEAD_H = 22;
+      const SEG_H     = 56;
+      const CHART_H   = 168;
+      const MSG_H     = 36;
+
+      const totalH = PAD
+        + HEADER_H  + GAP_LG
+        + SUMMARY_H + GAP_LG
+        + SUBHEAD_H + GAP_SM
+        + SEG_H     + GAP_LG
+        + SUBHEAD_H + GAP_SM
+        + SEG_H     + GAP_LG
+        + SUBHEAD_H + GAP_SM/2         // tighter gap before the bar chart
+        + CHART_H   + GAP_SM
+        + MSG_H     + PAD;
+
+      const canvas = document.createElement('canvas');
+      canvas.width  = W * SCALE;
+      canvas.height = totalH * SCALE;
+      const ctx = canvas.getContext('2d');
+      ctx.scale(SCALE, SCALE);
+      ctx.textBaseline = 'top';
+
+      const roundRect = (x2, y2, w, h, r) => {
+        r = Math.min(r, w / 2, h / 2);
+        ctx.beginPath();
+        ctx.moveTo(x2 + r, y2);
+        ctx.lineTo(x2 + w - r, y2);
+        ctx.arc(x2 + w - r, y2 + r, r, -Math.PI / 2, 0);
+        ctx.lineTo(x2 + w, y2 + h - r);
+        ctx.arc(x2 + w - r, y2 + h - r, r, 0, Math.PI / 2);
+        ctx.lineTo(x2 + r, y2 + h);
+        ctx.arc(x2 + r, y2 + h - r, r, Math.PI / 2, Math.PI);
+        ctx.lineTo(x2, y2 + r);
+        ctx.arc(x2 + r, y2 + r, r, Math.PI, 3 * Math.PI / 2);
+        ctx.closePath();
+      };
+
+      const drawSubhead = (text, x2, y2) => {
+        ctx.font = fonts.sub;
+        ctx.fillStyle = '#6b6b6b';
+        const upper = text.toUpperCase();
+        let cur = x2;
+        for (const ch of upper) {
+          ctx.fillText(ch, cur, y2);
+          cur += ctx.measureText(ch).width + 1.4;
+        }
+      };
+
+      const drawSegmentBar = (x2, y2, w, h, labels, colors, activeIdx) => {
+        const n        = labels.length;
+        const gap      = 4;
+        const segW     = (w - gap * (n - 1)) / n;
+
+        // Inactive rows first.
+        for (let i = 0; i < n; i++) {
+          if (i === activeIdx) continue;
+          ctx.fillStyle = colors[i];
+          roundRect(x2 + i * (segW + gap), y2, segW, h, 8);
+          ctx.fill();
+        }
+
+        // Active row: scaled up + soft drop shadow + 3px white ring.
+        const ax  = x2 + activeIdx * (segW + gap);
+        const dy  = -3;
+        const scl = 1.10;
+        ctx.save();
+        ctx.translate(ax + segW / 2, y2 + h / 2 + dy);
+        ctx.scale(scl, scl);
+        ctx.shadowColor   = 'rgba(0, 0, 0, 0.22)';
+        ctx.shadowBlur    = 20;
+        ctx.shadowOffsetY = 8;
+        ctx.fillStyle     = colors[activeIdx];
+        roundRect(-segW / 2, -h / 2, segW, h, 8);
+        ctx.fill();
+        ctx.shadowColor = 'transparent';
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth   = 3 / scl;
+        roundRect(-segW / 2, -h / 2, segW, h, 8);
+        ctx.stroke();
+        ctx.restore();
+
+        // Labels centred inside each row (yellow uses dark text).
+        ctx.font      = fonts.seg;
+        ctx.textBaseline = 'middle';
+        for (let i = 0; i < n; i++) {
+          const sx       = x2 + i * (segW + gap);
+          const segColor = colors[i];
+          ctx.fillStyle  = (segColor.toLowerCase() === '#facc15')
+            ? 'rgba(0, 0, 0, 0.78)'
+            : 'rgba(255, 255, 255, 0.92)';
+          const text = labels[i];
+          const tw   = ctx.measureText(text).width;
+          const tx   = sx + segW / 2 - tw / 2;
+          const ty   = (i === activeIdx) ? y2 + h / 2 + dy : y2 + h / 2;
+          ctx.fillText(text, tx, ty);
+        }
+      };
+
+      const drawVerticalChart = (x2, y2, w, h, bars) => {
+        const n        = bars.length;
+        const gap      = 16;
+        const colW     = (w - gap * (n - 1)) / n;
+        const trackH   = h - 50;            // leaves room under the track for labels
+        const labelTop = y2 + trackH + 8;
+        const valueTop = labelTop + 18;
+
+        for (let i = 0; i < n; i++) {
+          const cx  = x2 + i * (colW + gap);
+          const bar = bars[i];
+
+          // Track (light gray rounded pill).
+          ctx.fillStyle = '#f1f1f1';
+          roundRect(cx, y2, colW, trackH, 10);
+          ctx.fill();
+
+          // Filled portion, anchored at the bottom with rounded base.
+          // Clamp so the rounded base always fits inside the fill
+          // (otherwise the arc overshoots and the path is malformed
+          // when the bar would be shorter than the corner radius).
+          // At pct === 0 we skip the fill entirely so the column reads
+          // as truly empty (instead of a 10 px sliver that would read
+          // as "a little").
+          const baseR   = 10;
+          const fillH   = Math.min(Math.max((bar.pct / 100) * trackH, baseR), trackH);
+          const topY    = y2 + trackH - fillH;
+          // At pct === 0 we skip the fill entirely so the column reads
+          // as truly empty (instead of a 10 px sliver that would read as
+          // "a little"). Single paint — no duplicate path.
+          if (bar.pct > 0) {
+            ctx.fillStyle = bar.color;
+            ctx.beginPath();
+            ctx.moveTo(cx, topY);
+            ctx.lineTo(cx + colW, topY);
+            ctx.lineTo(cx + colW, y2 + trackH - baseR);
+            ctx.arc(cx + colW - baseR, y2 + trackH - baseR, baseR, 0, Math.PI / 2);
+            ctx.lineTo(cx + baseR, y2 + trackH);
+            ctx.arc(cx + baseR, y2 + trackH - baseR, baseR, Math.PI / 2, Math.PI);
+            ctx.closePath();
+            ctx.fill();
+          }
+
+          // Name (uppercase, mini letter-spacing) — measure total width
+          // first, then draw once centred under the bar so we don't
+          // paint the same name twice (which used to leave a visible
+          // duplicate like "TIEMPO TIEMPO").
+          ctx.font      = fonts.sub;
+          ctx.fillStyle = '#6b6b6b';
+          ctx.textBaseline = 'top';
+          const upper = bar.name.toUpperCase();
+          let totalW = 0;
+          for (let j = 0; j < upper.length; j++) {
+            totalW += ctx.measureText(upper[j]).width;
+            if (j < upper.length - 1) totalW += 1.4;
+          }
+          let curX = cx + colW / 2 - totalW / 2;
+          for (const ch of upper) {
+            ctx.fillText(ch, curX, labelTop);
+            curX += ctx.measureText(ch).width + 1.4;
+          }
+
+          // Value (bold dark, centred).
+          ctx.font      = fonts.barNum;
+          ctx.fillStyle = '#1a1a1a';
+          const val     = bar.value;
+          const valW    = ctx.measureText(val).width;
+          ctx.fillText(val, cx + colW / 2 - valW / 2, valueTop);
+        }
+      };
+
+      // 0. Card background (white) — no shadow because we are drawing
+      //    the whole card here, not within an HTML card.
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, W, totalH);
+
+      let y = PAD;
+
+      // 1. Header — "Ficha de uso de: <App en azul>"
+      ctx.font = fonts.header;
+      ctx.fillStyle = '#1a1a1a';
+      const headLabel = 'Ficha de uso de: ';
+      ctx.fillText(headLabel, PAD, y);
+      const headW = ctx.measureText(headLabel).width;
+      ctx.fillStyle = '#2563eb';
+      ctx.fillText(app, PAD + headW, y);
+      y += HEADER_H + GAP_LG;
+
+      // 2. Summary line — "Detectamos X min de uso. Tu ficha cae en la zona Y."
+      ctx.font = fonts.body;
+      ctx.fillStyle = '#1a1a1a';
+      const sumA = `Detectamos ${minutes} min de uso. Tu ficha cae en la zona `;
+      ctx.fillText(sumA, PAD, y);
+      let xCur = PAD + ctx.measureText(sumA).width;
+      ctx.font = fonts.bold;
+      ctx.fillStyle = ZONE_INKS[tIdx];
+      const zoneText = ZONE_LABELS[tIdx];
+      ctx.fillText(zoneText, xCur, y);
+      xCur += ctx.measureText(zoneText).width;
+      ctx.font = fonts.body;
+      ctx.fillStyle = '#1a1a1a';
+      ctx.fillText('.', xCur, y);
+      y += SUMMARY_H + GAP_LG;
+
+      // 3. Time bar with subhead
+      drawSubhead('Tiempo de uso', PAD, y);
+      y += SUBHEAD_H + GAP_SM;
+      drawSegmentBar(PAD, y, W - 2 * PAD, SEG_H, TIME_LBLS, ZONE_FILLS, tIdx);
+      y += SEG_H + GAP_LG;
+
+      // 4. Addiction bar with subhead
+      drawSubhead('Nivel de adición', PAD, y);
+      y += SUBHEAD_H + GAP_SM;
+      drawSegmentBar(PAD, y, W - 2 * PAD, SEG_H, ADIC_LABELS, ADIC_FILLS, aIdx);
+      y += SEG_H + GAP_LG;
+
+      // 5. Bar chart with subhead
+      drawSubhead('Resumen', PAD, y);
+      y += SUBHEAD_H + GAP_SM / 2;
+      drawVerticalChart(PAD, y, W - 2 * PAD, CHART_H, [
+        { name: 'Tiempo',   pct: timePct, color: ZONE_FILLS[tIdx], value: ZONE_LABELS[tIdx] },
+        { name: 'Adicción', pct: adicPct, color: ADIC_FILLS[aIdx], value: ADIC_LABELS[aIdx]  },
+        { name: 'Media',    pct: avgPct,  color: ZONE_FILLS[vIdx], value: '≈ ' + ZONE_LABELS[vIdx] }
+      ]);
+      y += CHART_H + GAP_SM;
+
+      // 6. Contextual message
+      ctx.font = fonts.msg;
+      ctx.fillStyle = ZONE_INKS[vIdx];
+      const msg = MSG_BY_ZONE[vIdx];
+      const textBaselineWas = ctx.textBaseline;
+      ctx.textBaseline = 'top';
+      const mw = ctx.measureText(msg).width;
+      ctx.fillText(msg, PAD + (W - 2 * PAD - mw) / 2, y);
+
+      // 7. Trigger the download.
+      canvas.toBlob((blob) => {
+        if (!blob) return;
+        const a       = document.createElement('a');
+        const safeApp = (app || 'sin-app').replace(/[^a-z0-9]/gi, '_').toLowerCase();
+        const stamp   = new Date().toISOString().slice(0, 10);
+        a.href        = URL.createObjectURL(blob);
+        a.download    = 'ficha-' + safeApp + '-' + stamp + '.png';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(a.href);
+      }, 'image/png');
+    }
+
+    // Wire the export button: only fires once it's visible (the result
+    // card has been generated at least once). The early-return guards
+    // against any stray click during the same tick the button becomes
+    // visible.
+    exportarBtn.addEventListener('click', () => {
+      if (exportarBtn.hidden) return;
+      exportFichaToPNG();
+    });
+
+    // `wasGenerated` flips to true after a successful AI pass and goes
+    // back to false the moment the user touches any field.
+    let wasGenerated = false;
+    // Snapshot of the most recent generation, used by the PNG exporter
+    // so it captures the values that were on screen, regardless of any
+    // radio/app/tiempo the user has touched since.
+    let lastMinutes = 0;
+    let lastTimeIdx = 0;
+    let lastAdicIdx = 0;
+    let lastAvgIdx  = 0;
+
+    function isFormComplete() {
+      // All three questions must be answered before the user can generate.
+      const appOk  = appValue.length > 0;
+      const timeOk = !!tiempoInput && tiempoInput.value.trim().length > 0;
+      const adicOk = adictoRadios.length > 0 &&
+                     Array.from(adictoRadios).some((r) => r.checked);
+      return appOk && timeOk && adicOk;
+    }
+
+    function updateGenerarBtnState() {
+      // While the AI is "processing" we keep the button disabled with
+      // the progress cursor (override on .is-processing).
+      if (generarBtn.classList.contains('is-processing')) {
+        generarBtn.disabled = true;
+        return;
+      }
+      // Otherwise: gray while empty OR while the result is fresh and the
+      // user hasn't touched the form yet.
+      generarBtn.disabled = !isFormComplete() || wasGenerated;
+      // Export button stays completely hidden until the first Generate
+      // has produced a result card; once the card is on screen the
+      // button appears below it (and re-disappears if a future flow
+      // ever hides the card again).
+      exportarBtn.hidden = resultCard.hasAttribute('hidden');
+    }
+
+    function onInputChange() {
+      // Any field change → previous generation becomes stale. The
+      // result card stays frozen at its last state until the user
+      // clicks Generar Ficha again.
+      wasGenerated = false;
+      updateGenerarBtnState();
+    }
+
+    // Initial reconcile of the empty app dropdown.
+    setAppValue('');
+
+    if (tiempoInput) tiempoInput.addEventListener('input', onInputChange);
+    adictoRadios.forEach((r) => r.addEventListener('change', onInputChange));
+
+    // Reconcile initial state once the DOM has settled.
+    updateGenerarBtnState();
+
+    /**
+     * Parse a free-form Spanish time string ("1h 30min", "90", "1:30",
+     * "2 horas y media", "45 min") into total minutes. Returns 0 for empty
+     * or unparseable input. Numbers without units are assumed to be minutes.
+     */
+    function parseTimeToMinutes(input) {
+      if (!input || typeof input !== 'string') return 0;
+      const s = input.toLowerCase().trim();
+      if (!s) return 0;
+
+      // HH:MM (or HH:MM:SS)
+      const colon = s.match(/^(\d{1,3}):(\d{1,2})(?::\d{1,2})?$/);
+      if (colon) {
+        const h = parseInt(colon[1], 10);
+        const m = parseInt(colon[2], 10);
+        if (m < 60) return h * 60 + m;
+      }
+
+      let total = 0;
+      let hasH = false, hasM = false;
+      const hMatch = s.match(/(\d+(?:[.,]\d+)?)\s*(?:h|hr|hrs|hora|horas)/);
+      const mMatch = s.match(/(\d+(?:[.,]\d+)?)\s*(?:m|min|mins|minuto|minutos)/);
+
+      if (hMatch) {
+        hasH = true;
+        total += parseFloat(hMatch[1].replace(',', '.')) * 60;
+      }
+      if (mMatch) {
+        hasM = true;
+        total += parseFloat(mMatch[1].replace(',', '.'));
+      }
+      if (!hasH && !hasM) {
+        const num = s.match(/(\d+(?:[.,]\d+)?)/);
+        if (num) total = parseFloat(num[1].replace(',', '.'));
+      }
+      return Math.max(0, Math.round(total));
+    }
+
+    /** Map minutes to one of the 5 zones. */
+    function getSegment(minutes) {
+      if (minutes <= 15)  return 0;          // 0-15 min   → blue
+      if (minutes <= 60)  return 1;          // 16 min-1h  → green
+      if (minutes <= 120) return 2;          // 1h1m-2h    → yellow
+      if (minutes <= 180) return 3;          // 2h1m-3h    → orange
+      return 4;                              // +3h        → red
+    }
+
+    /**
+     * Highlight the addiction bar so the matching segment (no → green,
+     * un-poco → yellow, si → red) gets the active style + aria-current.
+     * If no radio is checked, no segment is highlighted.
+     */
+    function highlightAdictoBar() {
+      const checked = document.querySelector('input[name="adicto"]:checked');
+      adictoBarSegments.forEach((seg, i) => {
+        const isActive = !!checked && ADICTION_BY_VALUE[checked.value] === i;
+        seg.classList.toggle('is-active', isActive);
+        if (isActive) seg.setAttribute('aria-current', 'true');
+        else seg.removeAttribute('aria-current');
+      });
+    }
+
+    generarBtn.addEventListener('click', () => {
+      if (generarBtn.disabled) return;
+
+      generarBtn.classList.add('is-processing');
+      generarBtn.disabled = true;   // gray + processing cursor during the delay
+      const raw = tiempoInput ? tiempoInput.value : '';
+      resultCard.hidden = false;
+      resultCard.classList.add('is-loading');
+      resultSummary.textContent = 'Analizando el tiempo introducido…';
+      segments.forEach((s) => s.classList.remove('is-active'));
+
+      const minutes = parseTimeToMinutes(raw);
+      const idx = getSegment(minutes);
+      lastTimeIdx = idx;
+
+      // Brief delay to simulate AI processing.
+      window.setTimeout(() => {
+        segments.forEach((seg, i) => {
+          seg.classList.toggle('is-active', i === idx);
+          if (i === idx) seg.setAttribute('aria-current', 'true');
+          else seg.removeAttribute('aria-current');
+        });
+
+        resultCard.classList.remove('is-loading');
+        resultSummary.innerHTML =
+          `Detectamos <strong>${minutes} min</strong> de uso. Tu ficha cae ` +
+          `en la zona <strong>${ZONE_LABELS[idx]}</strong>.`;
+        resultCard.dataset.zone = String(idx);
+        highlightAdictoBar();
+
+        // Update the Tiempo / Adicción / Media summary bar chart.
+        const checkedRadio = document.querySelector('input[name="adicto"]:checked');
+        const adicIdx0     = checkedRadio ? (ADICTION_BY_VALUE[checkedRadio.value] ?? 0) : 0;
+        // Cache the live snapshot for the PNG exporter.
+        lastMinutes = minutes;
+        lastTimeIdx = idx;
+        lastAdicIdx = adicIdx0;
+        // avgIdx will be (re)computed inside updateBarChart below.
+        updateBarChart(lastTimeIdx, adicIdx0);
+
+        generarBtn.classList.remove('is-processing');
+        wasGenerated = true;
+        updateGenerarBtnState();    // disable again — gray until the user changes a field
+      }, 720);
+    });
+
+    // ----- Theme switch -----
+    themeToggle.addEventListener('change', () => {
+      applyTheme(themeToggle.checked ? 'light' : 'dark');
+    });
+
+    function applyTheme(theme) {
+      const current = document.documentElement.getAttribute('data-theme');
+      if (theme === current) return;
+
+      // Respect reduced motion: instant swap, no animation.
+      const reduceMotion = window.matchMedia &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (reduceMotion) {
+        commitTheme(theme);
+        return;
+      }
+
+      const bloomTint = theme === 'light' ? '#ffefbb' : '#9bb8d2';
+      const knob = document.querySelector('.switch .knob');
+      const rect = knob.getBoundingClientRect();
+      const bx = rect.left + rect.width  / 2;
+      const by = rect.top  + rect.height / 2;
+
+      // Layer 1: halo ring (concentric pulse).
+      const halo = document.createElement('div');
+      halo.className = 'theme-halo';
+      halo.style.setProperty('--bx', bx + 'px');
+      halo.style.setProperty('--by', by + 'px');
+      halo.style.setProperty('--bloom-color', bloomTint);
+      document.body.appendChild(halo);
+      void halo.offsetWidth;
+      halo.classList.add('expand');
+      halo.addEventListener('animationend', () => halo.remove(), { once: true });
+
+      // Layer 2: full radial bloom — the star of the show.
+      const bloom = document.createElement('div');
+      bloom.className = 'theme-bloom';
+      bloom.style.setProperty('--bx', bx + 'px');
+      bloom.style.setProperty('--by', by + 'px');
+      bloom.style.setProperty('--bloom-color', bloomTint);
+      document.body.appendChild(bloom);
+      void bloom.offsetWidth;
+      bloom.classList.add('expand');
+      bloom.addEventListener('animationend', () => bloom.remove(), { once: true });
+
+      // Layer 3: toggle kicks a bit while the bloom expands.
+      toggleBtn.classList.add('kicking');
+      setTimeout(() => toggleBtn.classList.remove('kicking'), 820);
+
+      // Layer 4: golden sparks burst outward from the knob.
+      spawnSparks(bx, by);
+
+      // Sync data-theme with the moment the bloom reaches full coverage
+      // (≈55% of 1100ms = 605ms). After this point the bloom fades out
+      // smoothly, revealing the new themed page underneath.
+      const BLOOM_MS = 1100;
+      window.setTimeout(() => commitTheme(theme), Math.round(BLOOM_MS * 0.55));
+    }
+
+    function spawnSparks(bx, by) {
+      const wrap = document.createElement('div');
+      wrap.className = 'theme-sparks';
+      wrap.setAttribute('aria-hidden', 'true');
+      wrap.setAttribute('role', 'presentation');
+      document.body.appendChild(wrap);
+
+      const COUNT = 14;
+      for (let i = 0; i < COUNT; i++) {
+        const isStar = Math.random() < 0.32;
+        const angle  = Math.random() * Math.PI * 2;
+        const dist   = isStar ? 130 + Math.random() * 230
+                              :  90 + Math.random() * 280;
+        // Slight upward bias so all sparks read as rising, not symmetric.
+        const dx = Math.cos(angle) * dist;
+        const dy = Math.sin(angle) * dist - (24 + Math.random() * 70);
+        const size  = isStar ? 12 + Math.random() * 8
+                              :  3 + Math.random() * 5;
+        const dur   = 850 + Math.random() * 550;
+        const delay = Math.random() * 320;
+
+        const el = document.createElement('span');
+        el.className = 'spark ' + (isStar ? 'spark-star' : 'spark-dot');
+        el.style.setProperty('--bx',     bx + 'px');
+        el.style.setProperty('--by',     by + 'px');
+        el.style.setProperty('--dx',     dx + 'px');
+        el.style.setProperty('--dy',     dy + 'px');
+        el.style.setProperty('--size',   size + 'px');
+        el.style.setProperty('--dur',    dur + 'ms');
+        el.style.setProperty('--delay',  delay + 'ms');
+
+        if (isStar) {
+          el.innerHTML =
+            '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' +
+            '<path d="M12 2 L13.5 10.5 L22 12 L13.5 13.5 L12 22 L10.5 13.5 L2 12 L10.5 10.5 Z"/>' +
+            '</svg>';
+        }
+        wrap.appendChild(el);
+      }
+
+      // Cleanup once the slowest particle has had time to fade out.
+      setTimeout(() => wrap.remove(), 1800);
+    }
+
+    function commitTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      try { localStorage.setItem(THEME_KEY, theme); } catch (_) { /* ignore */ }
+      themeToggle.checked = (theme === 'light');
+      syncToggleLabel(theme);
+    }
+
+    function syncToggleLabel(theme) {
+      if (!labelEl) return;
+      labelEl.textContent = theme === 'light' ? 'Modo oscuro' : 'Modo claro';
+    }
+
+    // React to OS changes only if user hasn't picked a preference yet.
+    if (window.matchMedia) {
+      const mq = window.matchMedia('(prefers-color-scheme: light)');
+      const handler = (e) => {
+        let stored = null;
+        try { stored = localStorage.getItem(THEME_KEY); } catch (_) {}
+        if (stored === 'light' || stored === 'dark') return;
+        applyTheme(e.matches ? 'light' : 'dark');
+      };
+      if (mq.addEventListener) mq.addEventListener('change', handler);
+      else if (mq.addListener)  mq.addListener(handler);
+    }
+  </script>
+</body>
+</html>

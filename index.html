@@ -895,6 +895,48 @@
       padding: 64px 56px;
       gap: 24px;
     }
+    /* Toolbar: section heading on the left, clear-all trash button
+       on the right. Width 100% so the trash button aligns with the
+       notif-list column on both desktop and mobile. */
+    .notif-toolbar {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      width: 100%;
+      max-width: 640px;
+    }
+    .notif-clear-btn {
+      margin-left: auto;
+      width: 40px; height: 40px;
+      padding: 0;
+      background: transparent;
+      border: 1px solid color-mix(in srgb, var(--text) 18%, transparent);
+      border-radius: 10px;
+      color: color-mix(in srgb, var(--text) 82%, transparent);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      appearance: none;
+      -webkit-appearance: none;
+      transition: background-color 200ms ease,
+                  border-color 200ms ease,
+                  color 200ms ease,
+                  transform 160ms ease;
+    }
+    .notif-clear-btn:hover {
+      background-color: rgba(239, 68, 68, 0.10);
+      border-color: rgba(239, 68, 68, 0.45);
+      color: #b91c1c;
+    }
+    .notif-clear-btn:active { transform: scale(0.92); }
+    .notif-clear-btn:focus-visible {
+      outline: 2px solid #93c5fd;
+      outline-offset: 3px;
+    }
+    .notif-clear-btn svg { width: 20px; height: 20px; }
+    .notif-clear-btn[hidden] { display: none; }
     .notif-list {
       display: flex;
       flex-direction: column;
@@ -1598,7 +1640,23 @@
     </section>
 
     <section class="view view-notif" aria-label="Notificaciones recibidas">
-      <h1 class="view-heading">Notificaciones</h1>
+      <header class="notif-toolbar">
+        <h1 class="view-heading">Notificaciones</h1>
+        <button type="button" class="notif-clear-btn" id="notifClearBtn"
+                hidden
+                aria-label="Eliminar todas las notificaciones"
+                title="Eliminar todas las notificaciones">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6 l-1 14 a2 2 0 0 1 -2 2 H 8 a2 2 0 0 1 -2 -2 L 5 6"></path>
+            <path d="M10 11 v6"></path>
+            <path d="M14 11 v6"></path>
+            <path d="M9 6 V 4 a2 2 0 0 1 2 -2 h 2 a2 2 0 0 1 2 2 v 2"></path>
+          </svg>
+        </button>
+      </header>
       <div id="notifList" class="notif-list" role="list"
            aria-live="polite"></div>
       <p class="notif-empty" id="notifEmpty" hidden>
@@ -1728,13 +1786,16 @@
       const list  = document.getElementById('notifList');
       if (!list) return;
       const empty = document.getElementById('notifEmpty');
+      const clearBtn = document.getElementById('notifClearBtn');
       const log   = readNotifLog();
       list.innerHTML = '';
       if (log.length === 0) {
         if (empty) empty.hidden = false;
+        if (clearBtn) clearBtn.hidden = true;
         return;
       }
       if (empty) empty.hidden = true;
+      if (clearBtn) clearBtn.hidden = false;
       log.forEach((entry) => {
         const card = document.createElement('div');
         card.className = 'notif-card';
@@ -1787,6 +1848,13 @@
       applyBellState('off');
     }
     bellBtn.addEventListener('click', async () => {
+      // Optimistic update: instantly swap to the "on" visual so the
+      // user sees feedback for their tap (instead of staring at the
+      // red slash while a slow OS permission dialog appears, or when
+      // the local browser API ends up denying). Every path below that
+      // doesn't actually end up granted will call applyBellState('off')
+      // again to revert.
+      applyBellState('on');
       if (typeof Notification === 'undefined') {
         // Browser doesn't expose the notifications API at all — still
         // funnel through sendNotif so the Notificaciones view records
@@ -1797,14 +1865,13 @@
       }
       if (Notification.permission === 'granted') {
         writeNotifStored('1');
-        applyBellState('on');
+        // applyBellState('on') already set above — nothing more to do.
         return;
       }
       try {
         const result = await Notification.requestPermission();
         if (result === 'granted') {
           writeNotifStored('1');
-          applyBellState('on');
           // Defer the notification to the next event-loop tick so
           // it's outside the click handler's user-gesture window:
           // Chrome on file:// / localhost often silently drops a
@@ -1826,8 +1893,18 @@
         }
       } catch (err) {
         console.warn('Notification permission request failed:', err);
+        applyBellState('off');
       }
     });
+
+    // ----- Trash button: clear every logged notification -----
+    const notifClearBtn = document.getElementById('notifClearBtn');
+    if (notifClearBtn) {
+      notifClearBtn.addEventListener('click', () => {
+        writeNotifLog([]);
+        renderNotifView();
+      });
+    }
 
     // ----- Sidebar: collapse on desktop, slide‑in drawer on mobile -----
     const mqMobile     = window.matchMedia('(max-width: 767px)');

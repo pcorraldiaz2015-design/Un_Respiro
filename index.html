@@ -1,11 +1,17 @@
 <!DOCTYPE html>
-<html lang="es" data-theme="dark">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-title" content="Un Respiro" />
+<!-- saved from url=(0052)https://pcorraldiaz2015-design.github.io/Un_Respiro/ -->
+<html lang="es" data-theme="dark"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Un Respiro">
+  <!-- Bump this string on every deploy. `checkForUpdate()` fetches the
+       page with cache: 'no-store' + a unique query param and reads the
+       same meta tag from the freshly-fetched HTML; when the strings
+       differ, a red dot appears on the refresh button. Keep it in sync
+       with the `APP_VERSION` constant at the bottom of the script. -->
+  <meta name="app-version" content="v1">
   <!--
     iPhone home-screen icon & splash screen.
     The filename casing must EXACTLY match Logo.jpeg on disk — Windows
@@ -19,8 +25,8 @@
     home-screen icon (<link rel="apple-touch-icon"> above) renders
     the logo correctly across the board.
   -->
-  <link rel="apple-touch-icon" href="Logo.jpeg" sizes="180x180" />
-  <link rel="apple-touch-startup-image" href="Logo.jpeg" />
+  <link rel="apple-touch-icon" href="https://pcorraldiaz2015-design.github.io/Un_Respiro/Logo.jpeg" sizes="180x180">
+  <link rel="apple-touch-startup-image" href="https://pcorraldiaz2015-design.github.io/Un_Respiro/Logo.jpeg">
   <title>Hola, tiempo de desconectar</title>
   <script>
     // Resolve theme before paint to avoid flash of wrong palette.
@@ -1161,11 +1167,20 @@
         color: color-mix(in srgb, var(--text) 92%, transparent);
       }
       /* --- Refresh button sitting inside the topbar
-              (same `position: static` override as the bell). --- */
+              (`position: relative` so the update-dot ::after can
+              anchor to it; the bell uses `position: static` instead). --- */
       .refresh-btn {
-        position: static;
+        position: relative;
         width: 44px; height: 44px;
         border-radius: 10px;
+      }
+      /* Slightly tighter mobile red-dot so the 9×9 px circle doesn't
+         overwhelm the slim 44×44 topbar button. Border thickness
+         shrinks to match the smaller scale. */
+      .refresh-btn[data-update="true"]::after {
+        top: 5px; right: 5px;
+        width: 9px; height: 9px;
+        border-width: 1.5px;
       }
 
       /* --- Sidebar becomes a slide‑in drawer --- */
@@ -1305,6 +1320,72 @@
       }
     }
 
+    /* --- Real-OS notifications: "Enviar recordatorio" button (paper plane) --- */
+    .notif-send-btn {
+      width: 40px; height: 40px;
+      padding: 0;
+      background: transparent;
+      border: 1px solid color-mix(in srgb, var(--text) 18%, transparent);
+      border-radius: 10px;
+      color: color-mix(in srgb, var(--text) 82%, transparent);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      appearance: none;
+      -webkit-appearance: none;
+      transition: background-color 200ms ease,
+                  border-color 200ms ease,
+                  color 200ms ease,
+                  transform 160ms ease;
+    }
+    .notif-send-btn:hover {
+      background-color: rgba(37, 99, 235, 0.10);
+      border-color: rgba(37, 99, 235, 0.45);
+      color: #2563eb;
+    }
+    .notif-send-btn:active { transform: scale(0.92); }
+    .notif-send-btn:focus-visible {
+      outline: 2px solid #93c5fd;
+      outline-offset: 3px;
+    }
+    .notif-send-btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      color: color-mix(in srgb, var(--text) 35%, transparent);
+      border-color: color-mix(in srgb, var(--text) 12%, transparent);
+      background-color: transparent;
+      box-shadow: none;
+    }
+    .notif-send-btn svg { width: 20px; height: 20px; }
+    .notif-send-btn.is-sending { animation: sendPulse 820ms ease-out; }
+    @keyframes sendPulse {
+      0%   { transform: scale(1);    background-color: transparent; }
+      30%  { transform: scale(1.20); background-color: rgba(37, 99, 235, 0.20); }
+      100% { transform: scale(1);    background-color: transparent; }
+    }
+
+    /* --- Refresh button: red dot when an update is available ---
+       Desktop default — `.refresh-btn` is already `position: fixed`
+       so the absolute-positioned ::after anchors to it naturally. */
+    .refresh-btn[data-update="true"]::after {
+      content: "";
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 10px;
+      height: 10px;
+      background: #ef4444;
+      border-radius: 50%;
+      border: 2px solid var(--bg-main);
+      box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.4);
+      animation: updatePulse 1.6s ease-in-out infinite;
+    }
+    @keyframes updatePulse {
+      0%, 100% { transform: scale(1);    box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.40); }
+      50%      { transform: scale(1.18); box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.12); }
+    }
+
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
         animation-duration: 0.01ms !important;
@@ -1313,89 +1394,59 @@
     }
   </style>
 </head>
-<body data-view="home">
+<body data-view="ficha">
   <div class="drawer-overlay" id="drawerOverlay" aria-hidden="true"></div>
   <header class="mobile-topbar">
-    <button type="button" class="hamburger-btn" id="hamburgerBtn"
-            aria-label="Abrir menú" aria-expanded="false" title="Menú">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-           stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-           aria-hidden="true">
-        <line x1="3" y1="6"  x2="21" y2="6"></line>
+    <button type="button" class="hamburger-btn" id="hamburgerBtn" aria-label="Abrir menú" aria-expanded="false" title="Menú">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <line x1="3" y1="6" x2="21" y2="6"></line>
         <line x1="3" y1="12" x2="21" y2="12"></line>
         <line x1="3" y1="18" x2="21" y2="18"></line>
       </svg>
     </button>
     <div class="topbar-title">Un Respiro</div>
-    <button type="button" class="bell-btn" id="bellBtn"
-            data-state="off"
-            aria-label="Activar notificaciones"
-            title="Activar notificaciones">
-      <svg class="bell-icon bell-off" viewBox="0 0 24 24" fill="none"
-           stroke="currentColor" stroke-width="1.8"
-           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M6 8 a6 6 0 0 1 12 0 c0 7 3 9 3 9 H3 s3 -2 3 -9"/>
-        <path d="M10.3 21 a1.94 1.94 0 0 0 3.4 0"/>
-        <line x1="2" y1="2" x2="22" y2="22" stroke="#ef4444"
-              stroke-width="2.4"/>
+    <button type="button" class="bell-btn" id="bellBtn" data-state="off" aria-label="Activar notificaciones" title="Activar notificaciones">
+      <svg class="bell-icon bell-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M6 8 a6 6 0 0 1 12 0 c0 7 3 9 3 9 H3 s3 -2 3 -9"></path>
+        <path d="M10.3 21 a1.94 1.94 0 0 0 3.4 0"></path>
+        <line x1="2" y1="2" x2="22" y2="22" stroke="#ef4444" stroke-width="2.4"></line>
       </svg>
-      <svg class="bell-icon bell-on" viewBox="0 0 24 24" fill="none"
-           stroke="currentColor" stroke-width="1.8"
-           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M6 8 a6 6 0 0 1 12 0 c0 7 3 9 3 9 H3 s3 -2 3 -9"/>
-        <path d="M10.3 21 a1.94 1.94 0 0 0 3.4 0"/>
+      <svg class="bell-icon bell-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M6 8 a6 6 0 0 1 12 0 c0 7 3 9 3 9 H3 s3 -2 3 -9"></path>
+        <path d="M10.3 21 a1.94 1.94 0 0 0 3.4 0"></path>
       </svg>
     </button>
-    <button type="button" class="refresh-btn" id="refreshBtn"
-            aria-label="Actualizar la app" title="Actualizar la app">
-      <svg class="refresh-icon" viewBox="0 0 24 24" fill="none"
-           stroke="currentColor" stroke-width="1.8"
-           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <polyline points="23 4 23 10 17 10"/>
-        <path d="M20.49 15a9 9 0 1 1 -2.12 -9.36L 23 10"/>
+    <button type="button" class="refresh-btn" id="refreshBtn" aria-label="Actualizar la app" title="Actualizar la app">
+      <svg class="refresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <polyline points="23 4 23 10 17 10"></polyline>
+        <path d="M20.49 15a9 9 0 1 1 -2.12 -9.36L 23 10"></path>
       </svg>
     </button>
   </header>
   <aside class="sidebar" id="sidebar">
-    <button
-      class="toggle-btn"
-      id="toggleBtn"
-      type="button"
-      aria-label="Plegar o desplegar la barra lateral"
-      aria-expanded="true"
-      title="Plegar / desplegar"
-    >
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-           stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-           aria-hidden="true">
+    <button class="toggle-btn" id="toggleBtn" type="button" aria-label="Plegar o desplegar la barra lateral" aria-expanded="true" title="Plegar / desplegar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <polyline points="15 18 9 12 15 6"></polyline>
       </svg>
     </button>
 
     <nav class="sidebar-content" aria-label="Navegación principal">
-      <button type="button" class="nav-item is-active"
-              data-target="home" aria-current="page">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-             aria-hidden="true">
+      <button type="button" class="nav-item" data-target="home">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
           <polyline points="9 22 9 12 15 12 15 22"></polyline>
         </svg>
         <span>Inicio</span>
       </button>
-      <button type="button" class="nav-item" data-target="ficha">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-             aria-hidden="true">
+      <button type="button" class="nav-item is-active" data-target="ficha" aria-current="page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
           <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
         </svg>
         <span>Ficha</span>
       </button>
       <button type="button" class="nav-item" data-target="notif">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-             aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M6 8 a6 6 0 0 1 12 0 c0 7 3 9 3 9 H3 s3 -2 3 -9"></path>
           <path d="M10.3 21 a1.94 1.94 0 0 0 3.4 0"></path>
         </svg>
@@ -1403,9 +1454,7 @@
       </button>
       <!-- Theme switcher pinned to the bottom of the sidebar -->
       <label class="theme-switch" for="themeToggle" title="Cambiar tema">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-             aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <!-- moon when dark -->
           <g class="icon-moon">
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
@@ -1413,11 +1462,11 @@
           <!-- sun when light -->
           <g class="icon-sun">
             <circle cx="12" cy="12" r="4"></circle>
-            <line x1="12" y1="2"  x2="12" y2="4"></line>
+            <line x1="12" y1="2" x2="12" y2="4"></line>
             <line x1="12" y1="20" x2="12" y2="22"></line>
             <line x1="4.93" y1="4.93" x2="6.34" y2="6.34"></line>
             <line x1="17.66" y1="17.66" x2="19.07" y2="19.07"></line>
-            <line x1="2"  y1="12" x2="4"  y2="12"></line>
+            <line x1="2" y1="12" x2="4" y2="12"></line>
             <line x1="20" y1="12" x2="22" y2="12"></line>
             <line x1="4.93" y1="19.07" x2="6.34" y2="17.66"></line>
             <line x1="17.66" y1="6.34" x2="19.07" y2="4.93"></line>
@@ -1427,31 +1476,22 @@
         <span class="switch">
           <span class="track"></span>
           <span class="knob">
-            <svg class="icon-moon" viewBox="0 0 24 24" fill="currentColor"
-                 aria-hidden="true">
+            <svg class="icon-moon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
               <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
             </svg>
-            <svg class="icon-sun" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" stroke-width="2.4"
-                 stroke-linecap="round" stroke-linejoin="round"
-                 aria-hidden="true">
+            <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <circle cx="12" cy="12" r="4"></circle>
-              <line x1="12" y1="2"  x2="12" y2="4"></line>
+              <line x1="12" y1="2" x2="12" y2="4"></line>
               <line x1="12" y1="20" x2="12" y2="22"></line>
               <line x1="4.93" y1="4.93" x2="6.34" y2="6.34"></line>
               <line x1="17.66" y1="17.66" x2="19.07" y2="19.07"></line>
-              <line x1="2"  y1="12" x2="4"  y2="12"></line>
+              <line x1="2" y1="12" x2="4" y2="12"></line>
               <line x1="20" y1="12" x2="22" y2="12"></line>
               <line x1="4.93" y1="19.07" x2="6.34" y2="17.66"></line>
               <line x1="17.66" y1="6.34" x2="19.07" y2="4.93"></line>
             </svg>
           </span>
-          <input
-            type="checkbox"
-            id="themeToggle"
-            role="switch"
-            aria-label="Alternar entre modo claro y oscuro"
-          />
+          <input type="checkbox" id="themeToggle" role="switch" aria-label="Alternar entre modo claro y oscuro">
         </span>
       </label>
     </nav>
@@ -1467,48 +1507,39 @@
         <div class="question">
           <label for="ficha-app">1) Selecciona una app</label>
           <div class="app-dropdown" id="appDropdown" data-open="false">
-            <button type="button" class="app-dropdown-trigger"
-                    id="appDropdownTrigger" aria-haspopup="listbox"
-                    aria-expanded="false" aria-label="App">
+            <button type="button" class="app-dropdown-trigger is-empty" id="appDropdownTrigger" aria-haspopup="listbox" aria-expanded="false" aria-label="App">
               <span class="app-dropdown-label">Selecciona una app…</span>
             </button>
-            <svg class="app-dropdown-chevron" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" stroke-width="2.2"
-                 stroke-linecap="round" stroke-linejoin="round"
-                 aria-hidden="true">
+            <svg class="app-dropdown-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <polyline points="6 9 12 15 18 9"></polyline>
             </svg>
             <ul class="app-dropdown-menu" role="listbox" id="appDropdownMenu">
               <li role="option" data-value="Instagram" tabindex="-1">
                 <svg class="app-logo" viewBox="0 0 24 24" aria-hidden="true">
                   <defs>
-                    <linearGradient id="g-ig" x1="0" x2="1" y1="0" y2="1">
-                      <stop offset="0" stop-color="#feda75"/>
-                      <stop offset="0.5" stop-color="#fa7e1e"/>
-                      <stop offset="1" stop-color="#d62976"/>
-                    </linearGradient>
+                    <lineargradient id="g-ig" x1="0" x2="1" y1="0" y2="1">
+                      <stop offset="0" stop-color="#feda75"></stop>
+                      <stop offset="0.5" stop-color="#fa7e1e"></stop>
+                      <stop offset="1" stop-color="#d62976"></stop>
+                    </lineargradient>
                   </defs>
-                  <rect x="2.5" y="2.5" width="19" height="19" rx="5" fill="url(#g-ig)"/>
-                  <circle cx="12" cy="12" r="4" fill="none" stroke="#fff" stroke-width="2"/>
-                  <circle cx="17.2" cy="6.8" r="1.3" fill="#fff"/>
+                  <rect x="2.5" y="2.5" width="19" height="19" rx="5" fill="url(#g-ig)"></rect>
+                  <circle cx="12" cy="12" r="4" fill="none" stroke="#fff" stroke-width="2"></circle>
+                  <circle cx="17.2" cy="6.8" r="1.3" fill="#fff"></circle>
                 </svg>
                 <span>Instagram</span>
               </li>
               <li role="option" data-value="YouTube" tabindex="-1">
                 <svg class="app-logo" viewBox="0 0 24 24" aria-hidden="true">
-                  <rect x="1" y="5" width="22" height="14" rx="3.5" fill="#ff0000"/>
-                  <path d="M10 8.5 L 16 12 L 10 15.5 Z" fill="#fff"/>
+                  <rect x="1" y="5" width="22" height="14" rx="3.5" fill="#ff0000"></rect>
+                  <path d="M10 8.5 L 16 12 L 10 15.5 Z" fill="#fff"></path>
                 </svg>
                 <span>YouTube</span>
               </li>
               <li role="option" data-value="Threads" tabindex="-1">
                 <svg class="app-logo" viewBox="0 0 24 24" aria-hidden="true">
-                  <rect width="24" height="24" rx="5" fill="#000000"/>
-                  <text x="12" y="12" text-anchor="middle"
-                        dominant-baseline="central"
-                        font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif"
-                        font-size="17" font-weight="700"
-                        fill="#ffffff">@</text>
+                  <rect width="24" height="24" rx="5" fill="#000000"></rect>
+                  <text x="12" y="12" text-anchor="middle" dominant-baseline="central" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif" font-size="17" font-weight="700" fill="#ffffff">@</text>
                 </svg>
                 <span>Threads</span>
               </li>
@@ -1516,9 +1547,9 @@
                 <svg class="app-logo" viewBox="0 0 24 24" aria-hidden="true">
                   <!-- Discord blurple rounded square + two solid white
                        pill eyes, matching the real Discord mark glyph. -->
-                  <rect width="24" height="24" rx="5.5" fill="#5865F2"/>
-                  <ellipse cx="9"  cy="11" rx="1.9" ry="2.6" fill="#ffffff"/>
-                  <ellipse cx="15" cy="11" rx="1.9" ry="2.6" fill="#ffffff"/>
+                  <rect width="24" height="24" rx="5.5" fill="#5865F2"></rect>
+                  <ellipse cx="9" cy="11" rx="1.9" ry="2.6" fill="#ffffff"></ellipse>
+                  <ellipse cx="15" cy="11" rx="1.9" ry="2.6" fill="#ffffff"></ellipse>
                 </svg>
                 <span>Discord</span>
               </li>
@@ -1528,37 +1559,27 @@
                        stripes, two white translucent wings, antennae and
                        a tiny black head — reads as a bee at 22×22. -->
                   <defs>
-                    <radialGradient id="g-bee" cx="0.5" cy="0.4" r="0.7">
-                      <stop offset="0"   stop-color="#fff7c2"/>
-                      <stop offset="1"   stop-color="#f5b400"/>
-                    </radialGradient>
+                    <radialgradient id="g-bee" cx="0.5" cy="0.4" r="0.7">
+                      <stop offset="0" stop-color="#fff7c2"></stop>
+                      <stop offset="1" stop-color="#f5b400"></stop>
+                    </radialgradient>
                   </defs>
-                  <rect width="24" height="24" rx="5" fill="#fde68a"/>
+                  <rect width="24" height="24" rx="5" fill="#fde68a"></rect>
                   <!-- wings -->
-                  <ellipse cx="9.5"  cy="7.5" rx="4" ry="2.4"
-                           fill="#ffffff" fill-opacity="0.85"
-                           transform="rotate(-22 9.5 7.5)"/>
-                  <ellipse cx="14.5" cy="7.5" rx="4" ry="2.4"
-                           fill="#ffffff" fill-opacity="0.85"
-                           transform="rotate(22 14.5 7.5)"/>
+                  <ellipse cx="9.5" cy="7.5" rx="4" ry="2.4" fill="#ffffff" fill-opacity="0.85" transform="rotate(-22 9.5 7.5)"></ellipse>
+                  <ellipse cx="14.5" cy="7.5" rx="4" ry="2.4" fill="#ffffff" fill-opacity="0.85" transform="rotate(22 14.5 7.5)"></ellipse>
                   <!-- body -->
-                  <ellipse cx="12" cy="14" rx="6" ry="5.2"
-                           fill="url(#g-bee)" stroke="#1a1a1a"
-                           stroke-width="0.8"/>
+                  <ellipse cx="12" cy="14" rx="6" ry="5.2" fill="url(#g-bee)" stroke="#1a1a1a" stroke-width="0.8"></ellipse>
                   <!-- stripes -->
-                  <path d="M8.2 12.4 Q 12 13.6, 15.8 12.4" stroke="#1a1a1a"
-                        stroke-width="1.4" fill="none" stroke-linecap="round"/>
-                  <path d="M8.6 15.0 Q 12 16.0, 15.4 15.0" stroke="#1a1a1a"
-                        stroke-width="1.4" fill="none" stroke-linecap="round"/>
+                  <path d="M8.2 12.4 Q 12 13.6, 15.8 12.4" stroke="#1a1a1a" stroke-width="1.4" fill="none" stroke-linecap="round"></path>
+                  <path d="M8.6 15.0 Q 12 16.0, 15.4 15.0" stroke="#1a1a1a" stroke-width="1.4" fill="none" stroke-linecap="round"></path>
                   <!-- antennae (dots sit above the rotated wing silhouette) -->
-                  <path d="M10 9.5 Q 9 8, 7.4 7.1" stroke="#1a1a1a"
-                        stroke-width="0.9" fill="none" stroke-linecap="round"/>
-                  <path d="M14 9.5 Q 15 8, 16.6 7.1" stroke="#1a1a1a"
-                        stroke-width="0.9" fill="none" stroke-linecap="round"/>
-                  <circle cx="7.4"  cy="7.1" r="0.7" fill="#1a1a1a"/>
-                  <circle cx="16.6" cy="7.1" r="0.7" fill="#1a1a1a"/>
+                  <path d="M10 9.5 Q 9 8, 7.4 7.1" stroke="#1a1a1a" stroke-width="0.9" fill="none" stroke-linecap="round"></path>
+                  <path d="M14 9.5 Q 15 8, 16.6 7.1" stroke="#1a1a1a" stroke-width="0.9" fill="none" stroke-linecap="round"></path>
+                  <circle cx="7.4" cy="7.1" r="0.7" fill="#1a1a1a"></circle>
+                  <circle cx="16.6" cy="7.1" r="0.7" fill="#1a1a1a"></circle>
                   <!-- stinger -->
-                  <path d="M12 19 L 11 21 L 13 21 Z" fill="#1a1a1a"/>
+                  <path d="M12 19 L 11 21 L 13 21 Z" fill="#1a1a1a"></path>
                 </svg>
                 <span>Caine</span>
               </li>
@@ -1567,52 +1588,49 @@
                   <!-- 3D isometric black cube: top rhombus (lighter),
                        left face (deepest black), right face (darker
                        grey) so the edges between faces actually read. -->
-                  <polygon points="12,2.5 21.5,7.5 12,12.5 2.5,7.5" fill="#3a3a3a"/>
-                  <polygon points="2.5,7.5 12,12.5 12,21.5 2.5,16.5" fill="#000000"/>
-                  <polygon points="12,12.5 21.5,7.5 21.5,16.5 12,21.5" fill="#2a2a2a"/>
+                  <polygon points="12,2.5 21.5,7.5 12,12.5 2.5,7.5" fill="#3a3a3a"></polygon>
+                  <polygon points="2.5,7.5 12,12.5 12,21.5 2.5,16.5" fill="#000000"></polygon>
+                  <polygon points="12,12.5 21.5,7.5 21.5,16.5 12,21.5" fill="#2a2a2a"></polygon>
                 </svg>
                 <span>MakerWorld</span>
               </li>
               <li role="option" data-value="Spotify" tabindex="-1">
                 <svg class="app-logo" viewBox="0 0 24 24" aria-hidden="true">
-                  <circle cx="12" cy="12" r="10" fill="#1DB954"/>
-                  <path d="M7 9.5 Q 12 8, 17 11" stroke="#fff" stroke-width="2" stroke-linecap="round" fill="none"/>
-                  <path d="M7.5 12.5 Q 12 11.5, 16.5 14" stroke="#fff" stroke-width="2" stroke-linecap="round" fill="none"/>
-                  <path d="M8 15.5 Q 12 14.5, 15 16.5" stroke="#fff" stroke-width="2" stroke-linecap="round" fill="none"/>
+                  <circle cx="12" cy="12" r="10" fill="#1DB954"></circle>
+                  <path d="M7 9.5 Q 12 8, 17 11" stroke="#fff" stroke-width="2" stroke-linecap="round" fill="none"></path>
+                  <path d="M7.5 12.5 Q 12 11.5, 16.5 14" stroke="#fff" stroke-width="2" stroke-linecap="round" fill="none"></path>
+                  <path d="M8 15.5 Q 12 14.5, 15 16.5" stroke="#fff" stroke-width="2" stroke-linecap="round" fill="none"></path>
                 </svg>
                 <span>Spotify</span>
               </li>
               <li role="option" data-value="AmongUs" tabindex="-1">
                 <svg class="app-logo" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M5 8 C 5 5, 9 4, 12 4 C 15 4, 18 6, 17 10 V 18 H 5 Z" fill="#d63031"/>
-                  <ellipse cx="9" cy="10" rx="2.8" ry="3" fill="#aacfed"/>
-                  <ellipse cx="9" cy="10.3" rx="2.3" ry="2.4" fill="#3d8de4"/>
-                  <rect x="3" y="18" width="3.5" height="3.5" rx="1.5" fill="#d63031"/>
-                  <rect x="8.5" y="19" width="3.5" height="3" rx="1.5" fill="#d63031"/>
+                  <path d="M5 8 C 5 5, 9 4, 12 4 C 15 4, 18 6, 17 10 V 18 H 5 Z" fill="#d63031"></path>
+                  <ellipse cx="9" cy="10" rx="2.8" ry="3" fill="#aacfed"></ellipse>
+                  <ellipse cx="9" cy="10.3" rx="2.3" ry="2.4" fill="#3d8de4"></ellipse>
+                  <rect x="3" y="18" width="3.5" height="3.5" rx="1.5" fill="#d63031"></rect>
+                  <rect x="8.5" y="19" width="3.5" height="3" rx="1.5" fill="#d63031"></rect>
                 </svg>
                 <span>AmongUs</span>
               </li>
               <li role="option" data-value="Roblox" tabindex="-1">
                 <svg class="app-logo" viewBox="0 0 24 24" aria-hidden="true">
-                  <rect width="24" height="24" fill="#000"/>
+                  <rect width="24" height="24" fill="#000"></rect>
                   <!-- white square rotated 45° (diamond) dead-center -->
-                  <rect x="5" y="5" width="14" height="14"
-                        fill="#ffffff"
-                        transform="rotate(45 12 12)"/>
+                  <rect x="5" y="5" width="14" height="14" fill="#ffffff" transform="rotate(45 12 12)"></rect>
                 </svg>
                 <span>Roblox</span>
               </li>
               <li role="option" data-value="Gemini" tabindex="-1">
                 <svg class="app-logo" viewBox="0 0 24 24" aria-hidden="true">
                   <defs>
-                    <linearGradient id="g-gemini" x1="0" x2="1" y1="0" y2="1">
-                      <stop offset="0" stop-color="#4285F4"/>
-                      <stop offset="0.5" stop-color="#9b72cb"/>
-                      <stop offset="1" stop-color="#d96570"/>
-                    </linearGradient>
+                    <lineargradient id="g-gemini" x1="0" x2="1" y1="0" y2="1">
+                      <stop offset="0" stop-color="#4285F4"></stop>
+                      <stop offset="0.5" stop-color="#9b72cb"></stop>
+                      <stop offset="1" stop-color="#d96570"></stop>
+                    </lineargradient>
                   </defs>
-                  <path d="M12 2 L 14.5 9.5 L 22 12 L 14.5 14.5 L 12 22 L 9.5 14.5 L 2 12 L 9.5 9.5 Z"
-                        fill="url(#g-gemini)"/>
+                  <path d="M12 2 L 14.5 9.5 L 22 12 L 14.5 14.5 L 12 22 L 9.5 14.5 L 2 12 L 9.5 9.5 Z" fill="url(#g-gemini)"></path>
                 </svg>
                 <span>Gemini</span>
               </li>
@@ -1622,15 +1640,14 @@
                        an orange/coral circle with a thick C-shaped cut-out
                        and a small accent dot. Reads as the Claude brand at small sizes. -->
                   <defs>
-                    <linearGradient id="g-claude" x1="0" x2="1" y1="0" y2="1">
-                      <stop offset="0" stop-color="#f4a261"/>
-                      <stop offset="1" stop-color="#cc785c"/>
-                    </linearGradient>
+                    <lineargradient id="g-claude" x1="0" x2="1" y1="0" y2="1">
+                      <stop offset="0" stop-color="#f4a261"></stop>
+                      <stop offset="1" stop-color="#cc785c"></stop>
+                    </lineargradient>
                   </defs>
-                  <circle cx="12" cy="12" r="10" fill="url(#g-claude)"/>
-                  <path d="M15.6 8.3 A 5.4 5.4 0 1 0 15.6 15.7 L 14 14.2 A 3.2 3.2 0 1 1 14 9.8 Z"
-                        fill="#ffffff"/>
-                  <circle cx="16.5" cy="7.5" r="1.2" fill="#ffffff"/>
+                  <circle cx="12" cy="12" r="10" fill="url(#g-claude)"></circle>
+                  <path d="M15.6 8.3 A 5.4 5.4 0 1 0 15.6 15.7 L 14 14.2 A 3.2 3.2 0 1 1 14 9.8 Z" fill="#ffffff"></path>
+                  <circle cx="16.5" cy="7.5" r="1.2" fill="#ffffff"></circle>
                 </svg>
                 <span>Claude</span>
               </li>
@@ -1639,19 +1656,14 @@
                   <!-- Yellow rounded-square border + smaller green
                        rounded square inside; matching rx ratios so
                        the inner corners track the outer curve cleanly. -->
-                  <rect x="2" y="2" width="20" height="20" rx="6" ry="6"
-                        fill="#facc15"/>
-                  <rect x="4.5" y="4.5" width="15" height="15" rx="4" ry="4"
-                        fill="#16a34a"/>
+                  <rect x="2" y="2" width="20" height="20" rx="6" ry="6" fill="#facc15"></rect>
+                  <rect x="4.5" y="4.5" width="15" height="15" rx="4" ry="4" fill="#16a34a"></rect>
                 </svg>
                 <span>Classroom</span>
               </li>
             </ul>
           </div>
-          <input type="text" class="app-custom-input" id="appCustomInput"
-                 placeholder="especificar opción"
-                 aria-label="Especificar el nombre de la app si no está en la lista"
-                 autocomplete="off">
+          <input type="text" class="app-custom-input" id="appCustomInput" placeholder="especificar opción" aria-label="Especificar el nombre de la app si no está en la lista" autocomplete="off">
         </div>
         <div class="question">
           <label for="ficha-tiempo">2) Selecciona el tiempo</label>
@@ -1669,61 +1681,47 @@
         </div>
       </form>
 
-      <button type="button" class="generar-btn" id="generarBtn"
-              disabled
-              aria-label="Generar ficha con la información introducida">
+      <button type="button" class="generar-btn" id="generarBtn" disabled="" aria-label="Generar ficha con la información introducida">
         Generar Ficha
       </button>
 
-      <section class="result-card" id="resultCard" hidden
-               aria-live="polite" aria-label="Resultado del análisis">
+      <section class="result-card" id="resultCard" hidden="" aria-live="polite" aria-label="Resultado del análisis">
         <p class="result-summary" id="resultSummary">
           Analizando el tiempo introducido…
         </p>
-        <div class="threshold-bar" id="timeBar" role="group"
-             aria-label="Zonas de tiempo según uso">
-          <div class="segment seg-blue" data-idx="0"
-               role="img" aria-label="0 a 15 minutos">
+        <div class="threshold-bar" id="timeBar" role="group" aria-label="Zonas de tiempo según uso">
+          <div class="segment seg-blue" data-idx="0" role="img" aria-label="0 a 15 minutos">
             <span>0–15 min</span>
           </div>
-          <div class="segment seg-green" data-idx="1"
-               role="img" aria-label="16 minutos a 1 hora">
+          <div class="segment seg-green" data-idx="1" role="img" aria-label="16 minutos a 1 hora">
             <span>16 min–1 h</span>
           </div>
-          <div class="segment seg-yellow" data-idx="2"
-               role="img" aria-label="1 hora y 1 minuto a 2 horas">
+          <div class="segment seg-yellow" data-idx="2" role="img" aria-label="1 hora y 1 minuto a 2 horas">
             <span>1 h–2 h</span>
           </div>
-          <div class="segment seg-orange" data-idx="3"
-               role="img" aria-label="2 horas y 1 minuto a 3 horas">
+          <div class="segment seg-orange" data-idx="3" role="img" aria-label="2 horas y 1 minuto a 3 horas">
             <span>2 h–3 h</span>
           </div>
-          <div class="segment seg-red" data-idx="4"
-               role="img" aria-label="más de 3 horas">
+          <div class="segment seg-red" data-idx="4" role="img" aria-label="más de 3 horas">
             <span>+3 h</span>
           </div>
         </div>
 
         <p class="result-subhead">Nivel de adicción</p>
-        <div class="threshold-bar" id="adictoBar" role="group"
-             aria-label="Nivel de adicción según la pregunta 3">
-          <div class="segment seg-green" data-idx="0"
-               role="img" aria-label="Normal">
+        <div class="threshold-bar" id="adictoBar" role="group" aria-label="Nivel de adicción según la pregunta 3">
+          <div class="segment seg-green" data-idx="0" role="img" aria-label="Normal">
             <span>Normal</span>
           </div>
-          <div class="segment seg-yellow" data-idx="1"
-               role="img" aria-label="Regular">
+          <div class="segment seg-yellow" data-idx="1" role="img" aria-label="Regular">
             <span>Regular</span>
           </div>
-          <div class="segment seg-red" data-idx="2"
-               role="img" aria-label="Mal">
+          <div class="segment seg-red" data-idx="2" role="img" aria-label="Mal">
             <span>Mal</span>
           </div>
         </div>
 
         <p class="result-subhead">Resumen</p>
-        <div class="bar-chart" id="barChart" role="group"
-             aria-label="Gráfico resumen: tiempo, adicción y media">
+        <div class="bar-chart" id="barChart" role="group" aria-label="Gráfico resumen: tiempo, adicción y media">
           <div class="bar-col">
             <div class="bar-track" aria-hidden="true">
               <div class="bar-fill" id="barFillTime"></div>
@@ -1746,13 +1744,10 @@
             <div class="bar-value" id="barValueAvg">—</div>
           </div>
         </div>
-        <p class="bar-chart-msg" id="barChartMsg" data-zone="0"
-           aria-live="polite"></p>
+        <p class="bar-chart-msg" id="barChartMsg" data-zone="0" aria-live="polite"></p>
       </section>
 
-      <button type="button" class="generar-btn" id="exportarBtn"
-              hidden
-              aria-label="Exportar la ficha como imagen PNG">
+      <button type="button" class="generar-btn" id="exportarBtn" hidden="" aria-label="Exportar la ficha como imagen PNG">
         Exportar
       </button>
     </section>
@@ -1760,13 +1755,14 @@
     <section class="view view-notif" aria-label="Notificaciones recibidas">
       <header class="notif-toolbar">
         <h1 class="view-heading">Notificaciones</h1>
-        <button type="button" class="notif-clear-btn" id="notifClearBtn"
-                hidden
-                aria-label="Eliminar todas las notificaciones"
-                title="Eliminar todas las notificaciones">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-               aria-hidden="true">
+        <button type="button" class="notif-send-btn" id="notifSendBtn" aria-label="Enviar un recordatorio ahora" title="Enviar recordatorio ahora">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+        </button>
+        <button type="button" class="notif-clear-btn" id="notifClearBtn" hidden="" aria-label="Eliminar todas las notificaciones" title="Eliminar todas las notificaciones">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <polyline points="3 6 5 6 21 6"></polyline>
             <path d="M19 6 l-1 14 a2 2 0 0 1 -2 2 H 8 a2 2 0 0 1 -2 -2 L 5 6"></path>
             <path d="M10 11 v6"></path>
@@ -1775,9 +1771,8 @@
           </svg>
         </button>
       </header>
-      <div id="notifList" class="notif-list" role="list"
-           aria-live="polite"></div>
-      <p class="notif-empty" id="notifEmpty" hidden>
+      <div id="notifList" class="notif-list" role="list" aria-live="polite"></div>
+      <p class="notif-empty" id="notifEmpty" hidden="">
         Aún no has recibido ninguna notificación. Activa la campana arriba
         a la derecha para empezar a recibirlas.
       </p>
@@ -1955,6 +1950,23 @@
         : 'Activar notificaciones';
       bellBtn.setAttribute('aria-label', label);
       bellBtn.setAttribute('title', label);
+      // Mirror the new "Enviar recordatorio" button: when permission
+      // isn't granted, disable + dim it so the user can't spam
+      // 'denied' log entries. Function declarations are hoisted so
+      // `typeof` is defensive only — this branch is always reachable
+      // when applyBellState is called from a user click. The init
+      // call(s) at script start reach here too; the helper is a pure
+      // DOM-only check (getElementById + property writes), no TDZ.
+      if (typeof syncNotifSendBtnState === 'function') {
+        syncNotifSendBtnState();
+      }
+      // NOTE: We deliberately do NOT call clearPendingReminder()
+      // from here. applyBellState is invoked once at script init
+      // (default state = 'off'), at which point the `let
+      // pendingReminderTimer` declared further down this script is
+      // still in its temporal dead zone — calling the cleanup hook
+      // there would throw ReferenceError. The actual cleanup-on-
+      // toggle-off lives in a second bellBtn click listener below.
     }
     // Initial state: granted only if the browser says so AND we have a
     // persisted "1" token from a previous consent click.
@@ -2015,6 +2027,24 @@
       }
     });
 
+    // Second bell click listener: cancel any pending reminder the
+    // moment the user toggles notifications off. We use a separate
+    // listener (not a call from applyBellState) because applyBellState
+    // is also invoked once at script init when `let pendingReminderTimer`
+    // is still in TDZ — calling clearPendingReminder() from there
+    // would throw. A click listener only fires after user interaction
+    // (well after init), so no TDZ exposure.
+    bellBtn.addEventListener('click', () => {
+      // Defer one tick so the existing handler has already flipped
+      // bellBtn.dataset.state to its final value ('on' or 'off').
+      setTimeout(() => {
+        if (bellBtn.dataset.state !== 'off') return;
+        if (typeof clearPendingReminder === 'function') {
+          clearPendingReminder();
+        }
+      }, 0);
+    });
+
     // ----- Trash button: clear every logged notification -----
     const notifClearBtn = document.getElementById('notifClearBtn');
     if (notifClearBtn) {
@@ -2039,6 +2069,11 @@
         refreshing = true;
         refreshBtn.disabled = true;
         refreshBtn.classList.add('is-spinning');
+        // Clear the update indicator immediately so the user sees the
+        // dot disappear the moment they tap (the page is about to
+        // reload with the new version anyway, but reverting on the
+        // same frame is much clearer than waiting for paint).
+        setUpdateAvailable(false);
         // Brief delay so the user sees the spin start before the
         // page navigates; the animation itself is 700 ms but we
         // cut in at ~480 ms so they're already convinced something
@@ -2890,6 +2925,195 @@
       if (mq.addEventListener) mq.addEventListener('change', handler);
       else if (mq.addListener)  mq.addListener(handler);
     }
-  </script>
-</body>
-</html>
+  
+    /* =====================================================================
+       REAL OS NOTIFICATIONS BEYOND THE WELCOME CHIME
+       =====================================================================
+       The bell button already fires a welcome chime on grant. Here we
+       add two more sources of real OS-level notifications:
+         (a) Manual "Enviar recordatorio ahora" button in the Notificaciones
+             toolbar — picks a random tip from WELLNESS_TIPS and pushes it
+             through sendNotif. Only delivers to the OS when the user has
+             already granted browser-notification access; otherwise
+             sendNotif records the attempt in the in-app log as 'denied'
+             so the user sees why nothing appeared.
+         (b) Auto-triggered reminder ~10s after a ficha is generated in
+             the orange (3) or red (4) zone, with a body that names the
+             app. Any pending reminder is cancelled first so they never
+             stack.
+
+       Mobile browsers suspend timers when the app is backgrounded, so we:
+         - keep the delay short (10 s) so it usually still fires before
+           the user leaves the page
+         - skip scheduling entirely when `document.hidden` is true at the
+           moment of generation (they won't see it anyway)
+         - cancel the timer the moment the tab goes hidden, so we don't
+           dump an outdated reminder in their face when they return
+       ===================================================================== */
+    const WELLNESS_TIPS = Object.freeze([
+      'Respira hondo 4 veces. Inhala por la nariz, exhala por la boca.',
+      'Sal a caminar 5 minutos sin el móvil. Tu espalda y ojos lo agradecerán.',
+      'Estira los brazos por encima de la cabeza. Aguanta 10 segundos.',
+      'Mira por la ventana un objeto lejano. Tu vista necesita descanso.',
+      'Bebe un vaso de agua. Es el mejor reset para tu cuerpo.',
+      'Cierra los ojos durante 30 segundos. Relaja la mandíbula y los hombros.',
+      'Escribe una frase en una libreta. Reconecta con el mundo físico.',
+      'Pon los pies en el suelo y lleva tu atención a la respiración.',
+      'Escucha una canción que te guste sin hacer nada más. Solo eso.',
+      'Saluda a alguien que tengas cerca. Una sonrisa cambia el día.'
+    ]);
+    function pickWellnessTip() {
+      return WELLNESS_TIPS[Math.floor(Math.random() * WELLNESS_TIPS.length)];
+    }
+
+    let pendingReminderTimer = null;
+    function clearPendingReminder() {
+      if (pendingReminderTimer !== null) {
+        clearTimeout(pendingReminderTimer);
+        pendingReminderTimer = null;
+      }
+    }
+    // Mirror the bell/permission state on the "Enviar recordatorio"
+    // button: when notifications aren't granted we disable + dim the
+    // button so the user can't spam 'denied' log entries by tapping
+    // it. applyBellState() calls us; we also call once at the bottom
+    // of this script to set the initial visual.
+    function syncNotifSendBtnState() {
+      const btn = document.getElementById('notifSendBtn');
+      if (!btn) return;
+      const granted = (typeof Notification !== 'undefined'
+                       && Notification.permission === 'granted');
+      btn.disabled = !granted;
+      // Visual dim + 'not-allowed' cursor live in CSS (.notif-send-btn:disabled)
+      // to match the existing `.generar-btn:disabled` pattern.
+      const nextLabel = granted
+        ? 'Enviar recordatorio ahora'
+        : 'Activa las notificaciones primero';
+      btn.title = nextLabel;
+      btn.setAttribute('aria-label', nextLabel);
+    }
+
+    function sendManualReminder() {
+      const btn = document.getElementById('notifSendBtn');
+      if (btn) {
+        btn.classList.add('is-sending');
+        setTimeout(() => btn.classList.remove('is-sending'), 820);
+      }
+      // `silent: false` (the default) lets the OS actually surface
+      // this with a sound/visual pop. `tag` lets the OS group stacked
+      // reminders so spammy taps don't fill the notification tray.
+      sendNotif('Un Respiro', {
+        body: pickWellnessTip(),
+        tag: 'manual-respiro'
+      });
+    }
+    function scheduleAutoReminder(delayMs, body) {
+      clearPendingReminder();
+      // Skip silently if the tab is hidden — a setTimeout on a hidden
+      // mobile tab is unreliable (browsers throttle aggressively) and
+      // even if it fires the user can't hear the OS chime anyway.
+      if (document.hidden) return;
+      pendingReminderTimer = setTimeout(() => {
+        pendingReminderTimer = null;
+        sendNotif('Un Respiro', {
+          body: body || pickWellnessTip(),
+          tag: 'auto-respiro'
+        });
+      }, delayMs);
+    }
+    // Hide any pending reminder the moment the user backgrounds the
+    // tab; re-firing on visibility return would feel noisy.
+    document.addEventListener('visibilitychange', clearPendingReminder);
+
+    // Manual "Enviar recordatorio ahora" button — we deliberately do
+    // NOT chain a permission prompt from this button, that would be
+    // an unrequested UX surprise. sendNotif will record the attempt
+    // as 'denied' if the bell hasn't been enabled, which is honest.
+    const notifSendBtn = document.getElementById('notifSendBtn');
+    if (notifSendBtn) {
+      notifSendBtn.addEventListener('click', sendManualReminder);
+    }
+
+    // Auto-reminder after a bad-zoned ficha. We register a SECOND
+    // listener on the same element, AFTER the existing generarBtn
+    // handler, so by the time we run `lastTimeIdx` has already been
+    // updated synchronously to the new zone index. Listeners on the
+    // same element fire in registration order, so this is reliable
+    // — no need for a setTimeout dance.
+    generarBtn.addEventListener('click', () => {
+      if (lastTimeIdx < 3) {           // blue/green/yellow zones
+        clearPendingReminder();
+        return;
+      }
+      // orange (3) or red (4): schedule a soft 10-second reminder.
+      const app = (appValue || '').trim() || 'esa app';
+      scheduleAutoReminder(
+        10000,
+        'Has pasado mucho tiempo en ' + app + '. ' + pickWellnessTip()
+      );
+    });
+
+    /* =====================================================================
+       UPDATE-DETECTION: RED DOT ON THE REFRESH BUTTON
+       =====================================================================
+       Static deploys (e.g. GitHub Pages) overwrite the same `index.html`
+       on every commit; the user's browser keeps serving the OLD HTML
+       from cache, so they never see the new version unless they do a
+       hard reload. We solve this by embedding `<meta name="app-version">`
+       and re-fetching the page (cache-bypass) on load: if the version
+       string in the freshly-fetched HTML differs from the one this
+       script was loaded with, set `data-update="true"` on .refresh-btn
+       and the CSS paints a red pulsing dot.
+
+       Awareness when this fails (all silent, the user just won't see
+       the dot — never a wrong indicator):
+         - file:// origins (Chrome blocks fetch() of local files)
+         - Offline / CSP blocks the fetch
+         - CDN with stale data: `cache: 'no-store'` + a unique query
+           param defeat browser cache but can't defeat an upstream CDN
+           that's still serving stale data — worst case is a delayed
+           indicator.
+       ===================================================================== */
+    const APP_VERSION = 'v1';
+    function readLocalAppVersion() {
+      try {
+        const meta = document.querySelector('meta[name="app-version"]');
+        return meta && meta.getAttribute('content');
+      } catch (_) { return null; }
+    }
+    function setUpdateAvailable(yes) {
+      try { refreshBtn.dataset.update = yes ? 'true' : 'false'; }
+      catch (_) { /* refreshBtn may not exist in extremely old layouts */ }
+    }
+    async function checkForUpdate() {
+      try {
+        // Re-use the same cache-busting approach the refresh button
+        // already uses: append `_v=now` and drop any existing version.
+        const url = new URL(location.href);
+        url.searchParams.set('_v', Date.now().toString());
+        const resp = await fetch(url.href, { cache: 'no-store' });
+        if (!resp.ok) return;
+        // DOMParser is safer than regex for embedded HTML parsing.
+        const doc = new DOMParser().parseFromString(
+          await resp.text(), 'text/html'
+        );
+        const remoteMeta = doc.querySelector('meta[name="app-version"]');
+        const remoteVersion = remoteMeta && remoteMeta.getAttribute('content');
+        const localVersion  = readLocalAppVersion();
+        // Bail on missing values so a half-rendered page can't trigger
+        // a false-positive red dot.
+        if (!remoteVersion || !localVersion) return;
+        setUpdateAvailable(remoteVersion !== localVersion);
+      } catch (_) {
+        // file://, CSP, network — silent fail.
+      }
+    }
+    // Defer the first check so it doesn't compete with critical paint
+    // or the welcome-chime setTimeout(0). applyBellState already called
+    // syncNotifSendBtnState() during init, so no extra initial paint is
+    // needed here.
+    setTimeout(checkForUpdate, 2500);
+</script>
+
+
+</body></html>

@@ -1,17 +1,11 @@
 <!DOCTYPE html>
-<!-- saved from url=(0052)https://pcorraldiaz2015-design.github.io/Un_Respiro/ -->
-<html lang="es" data-theme="dark"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<!-- saved from url=(0027)file:///C:/Pablo/index.html -->
+<html lang="es" data-theme="light"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Un Respiro">
-  <!-- Bump this string on every deploy. `checkForUpdate()` fetches the
-       page with cache: 'no-store' + a unique query param and reads the
-       same meta tag from the freshly-fetched HTML; when the strings
-       differ, a red dot appears on the refresh button. Keep it in sync
-       with the `APP_VERSION` constant at the bottom of the script. -->
-  <meta name="app-version" content="v1">
   <!--
     iPhone home-screen icon & splash screen.
     The filename casing must EXACTLY match Logo.jpeg on disk — Windows
@@ -1167,20 +1161,11 @@
         color: color-mix(in srgb, var(--text) 92%, transparent);
       }
       /* --- Refresh button sitting inside the topbar
-              (`position: relative` so the update-dot ::after can
-              anchor to it; the bell uses `position: static` instead). --- */
+              (same `position: static` override as the bell). --- */
       .refresh-btn {
-        position: relative;
+        position: static;
         width: 44px; height: 44px;
         border-radius: 10px;
-      }
-      /* Slightly tighter mobile red-dot so the 9×9 px circle doesn't
-         overwhelm the slim 44×44 topbar button. Border thickness
-         shrinks to match the smaller scale. */
-      .refresh-btn[data-update="true"]::after {
-        top: 5px; right: 5px;
-        width: 9px; height: 9px;
-        border-width: 1.5px;
       }
 
       /* --- Sidebar becomes a slide‑in drawer --- */
@@ -1320,72 +1305,6 @@
       }
     }
 
-    /* --- Real-OS notifications: "Enviar recordatorio" button (paper plane) --- */
-    .notif-send-btn {
-      width: 40px; height: 40px;
-      padding: 0;
-      background: transparent;
-      border: 1px solid color-mix(in srgb, var(--text) 18%, transparent);
-      border-radius: 10px;
-      color: color-mix(in srgb, var(--text) 82%, transparent);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      appearance: none;
-      -webkit-appearance: none;
-      transition: background-color 200ms ease,
-                  border-color 200ms ease,
-                  color 200ms ease,
-                  transform 160ms ease;
-    }
-    .notif-send-btn:hover {
-      background-color: rgba(37, 99, 235, 0.10);
-      border-color: rgba(37, 99, 235, 0.45);
-      color: #2563eb;
-    }
-    .notif-send-btn:active { transform: scale(0.92); }
-    .notif-send-btn:focus-visible {
-      outline: 2px solid #93c5fd;
-      outline-offset: 3px;
-    }
-    .notif-send-btn:disabled {
-      opacity: 0.55;
-      cursor: not-allowed;
-      color: color-mix(in srgb, var(--text) 35%, transparent);
-      border-color: color-mix(in srgb, var(--text) 12%, transparent);
-      background-color: transparent;
-      box-shadow: none;
-    }
-    .notif-send-btn svg { width: 20px; height: 20px; }
-    .notif-send-btn.is-sending { animation: sendPulse 820ms ease-out; }
-    @keyframes sendPulse {
-      0%   { transform: scale(1);    background-color: transparent; }
-      30%  { transform: scale(1.20); background-color: rgba(37, 99, 235, 0.20); }
-      100% { transform: scale(1);    background-color: transparent; }
-    }
-
-    /* --- Refresh button: red dot when an update is available ---
-       Desktop default — `.refresh-btn` is already `position: fixed`
-       so the absolute-positioned ::after anchors to it naturally. */
-    .refresh-btn[data-update="true"]::after {
-      content: "";
-      position: absolute;
-      top: 6px;
-      right: 6px;
-      width: 10px;
-      height: 10px;
-      background: #ef4444;
-      border-radius: 50%;
-      border: 2px solid var(--bg-main);
-      box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.4);
-      animation: updatePulse 1.6s ease-in-out infinite;
-    }
-    @keyframes updatePulse {
-      0%, 100% { transform: scale(1);    box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.40); }
-      50%      { transform: scale(1.18); box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.12); }
-    }
-
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
         animation-duration: 0.01ms !important;
@@ -1472,7 +1391,7 @@
             <line x1="17.66" y1="6.34" x2="19.07" y2="4.93"></line>
           </g>
         </svg>
-        <span class="theme-switch-label">Modo claro</span>
+        <span class="theme-switch-label">Modo oscuro</span>
         <span class="switch">
           <span class="track"></span>
           <span class="knob">
@@ -1755,12 +1674,6 @@
     <section class="view view-notif" aria-label="Notificaciones recibidas">
       <header class="notif-toolbar">
         <h1 class="view-heading">Notificaciones</h1>
-        <button type="button" class="notif-send-btn" id="notifSendBtn" aria-label="Enviar un recordatorio ahora" title="Enviar recordatorio ahora">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <line x1="22" y1="2" x2="11" y2="13"></line>
-            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-          </svg>
-        </button>
         <button type="button" class="notif-clear-btn" id="notifClearBtn" hidden="" aria-label="Eliminar todas las notificaciones" title="Eliminar todas las notificaciones">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <polyline points="3 6 5 6 21 6"></polyline>
@@ -1950,23 +1863,6 @@
         : 'Activar notificaciones';
       bellBtn.setAttribute('aria-label', label);
       bellBtn.setAttribute('title', label);
-      // Mirror the new "Enviar recordatorio" button: when permission
-      // isn't granted, disable + dim it so the user can't spam
-      // 'denied' log entries. Function declarations are hoisted so
-      // `typeof` is defensive only — this branch is always reachable
-      // when applyBellState is called from a user click. The init
-      // call(s) at script start reach here too; the helper is a pure
-      // DOM-only check (getElementById + property writes), no TDZ.
-      if (typeof syncNotifSendBtnState === 'function') {
-        syncNotifSendBtnState();
-      }
-      // NOTE: We deliberately do NOT call clearPendingReminder()
-      // from here. applyBellState is invoked once at script init
-      // (default state = 'off'), at which point the `let
-      // pendingReminderTimer` declared further down this script is
-      // still in its temporal dead zone — calling the cleanup hook
-      // there would throw ReferenceError. The actual cleanup-on-
-      // toggle-off lives in a second bellBtn click listener below.
     }
     // Initial state: granted only if the browser says so AND we have a
     // persisted "1" token from a previous consent click.
@@ -2027,24 +1923,6 @@
       }
     });
 
-    // Second bell click listener: cancel any pending reminder the
-    // moment the user toggles notifications off. We use a separate
-    // listener (not a call from applyBellState) because applyBellState
-    // is also invoked once at script init when `let pendingReminderTimer`
-    // is still in TDZ — calling clearPendingReminder() from there
-    // would throw. A click listener only fires after user interaction
-    // (well after init), so no TDZ exposure.
-    bellBtn.addEventListener('click', () => {
-      // Defer one tick so the existing handler has already flipped
-      // bellBtn.dataset.state to its final value ('on' or 'off').
-      setTimeout(() => {
-        if (bellBtn.dataset.state !== 'off') return;
-        if (typeof clearPendingReminder === 'function') {
-          clearPendingReminder();
-        }
-      }, 0);
-    });
-
     // ----- Trash button: clear every logged notification -----
     const notifClearBtn = document.getElementById('notifClearBtn');
     if (notifClearBtn) {
@@ -2069,11 +1947,6 @@
         refreshing = true;
         refreshBtn.disabled = true;
         refreshBtn.classList.add('is-spinning');
-        // Clear the update indicator immediately so the user sees the
-        // dot disappear the moment they tap (the page is about to
-        // reload with the new version anyway, but reverting on the
-        // same frame is much clearer than waiting for paint).
-        setUpdateAvailable(false);
         // Brief delay so the user sees the spin start before the
         // page navigates; the animation itself is 700 ms but we
         // cut in at ~480 ms so they're already convinced something
@@ -2925,195 +2798,7 @@
       if (mq.addEventListener) mq.addEventListener('change', handler);
       else if (mq.addListener)  mq.addListener(handler);
     }
-  
-    /* =====================================================================
-       REAL OS NOTIFICATIONS BEYOND THE WELCOME CHIME
-       =====================================================================
-       The bell button already fires a welcome chime on grant. Here we
-       add two more sources of real OS-level notifications:
-         (a) Manual "Enviar recordatorio ahora" button in the Notificaciones
-             toolbar — picks a random tip from WELLNESS_TIPS and pushes it
-             through sendNotif. Only delivers to the OS when the user has
-             already granted browser-notification access; otherwise
-             sendNotif records the attempt in the in-app log as 'denied'
-             so the user sees why nothing appeared.
-         (b) Auto-triggered reminder ~10s after a ficha is generated in
-             the orange (3) or red (4) zone, with a body that names the
-             app. Any pending reminder is cancelled first so they never
-             stack.
-
-       Mobile browsers suspend timers when the app is backgrounded, so we:
-         - keep the delay short (10 s) so it usually still fires before
-           the user leaves the page
-         - skip scheduling entirely when `document.hidden` is true at the
-           moment of generation (they won't see it anyway)
-         - cancel the timer the moment the tab goes hidden, so we don't
-           dump an outdated reminder in their face when they return
-       ===================================================================== */
-    const WELLNESS_TIPS = Object.freeze([
-      'Respira hondo 4 veces. Inhala por la nariz, exhala por la boca.',
-      'Sal a caminar 5 minutos sin el móvil. Tu espalda y ojos lo agradecerán.',
-      'Estira los brazos por encima de la cabeza. Aguanta 10 segundos.',
-      'Mira por la ventana un objeto lejano. Tu vista necesita descanso.',
-      'Bebe un vaso de agua. Es el mejor reset para tu cuerpo.',
-      'Cierra los ojos durante 30 segundos. Relaja la mandíbula y los hombros.',
-      'Escribe una frase en una libreta. Reconecta con el mundo físico.',
-      'Pon los pies en el suelo y lleva tu atención a la respiración.',
-      'Escucha una canción que te guste sin hacer nada más. Solo eso.',
-      'Saluda a alguien que tengas cerca. Una sonrisa cambia el día.'
-    ]);
-    function pickWellnessTip() {
-      return WELLNESS_TIPS[Math.floor(Math.random() * WELLNESS_TIPS.length)];
-    }
-
-    let pendingReminderTimer = null;
-    function clearPendingReminder() {
-      if (pendingReminderTimer !== null) {
-        clearTimeout(pendingReminderTimer);
-        pendingReminderTimer = null;
-      }
-    }
-    // Mirror the bell/permission state on the "Enviar recordatorio"
-    // button: when notifications aren't granted we disable + dim the
-    // button so the user can't spam 'denied' log entries by tapping
-    // it. applyBellState() calls us; we also call once at the bottom
-    // of this script to set the initial visual.
-    function syncNotifSendBtnState() {
-      const btn = document.getElementById('notifSendBtn');
-      if (!btn) return;
-      const granted = (typeof Notification !== 'undefined'
-                       && Notification.permission === 'granted');
-      btn.disabled = !granted;
-      // Visual dim + 'not-allowed' cursor live in CSS (.notif-send-btn:disabled)
-      // to match the existing `.generar-btn:disabled` pattern.
-      const nextLabel = granted
-        ? 'Enviar recordatorio ahora'
-        : 'Activa las notificaciones primero';
-      btn.title = nextLabel;
-      btn.setAttribute('aria-label', nextLabel);
-    }
-
-    function sendManualReminder() {
-      const btn = document.getElementById('notifSendBtn');
-      if (btn) {
-        btn.classList.add('is-sending');
-        setTimeout(() => btn.classList.remove('is-sending'), 820);
-      }
-      // `silent: false` (the default) lets the OS actually surface
-      // this with a sound/visual pop. `tag` lets the OS group stacked
-      // reminders so spammy taps don't fill the notification tray.
-      sendNotif('Un Respiro', {
-        body: pickWellnessTip(),
-        tag: 'manual-respiro'
-      });
-    }
-    function scheduleAutoReminder(delayMs, body) {
-      clearPendingReminder();
-      // Skip silently if the tab is hidden — a setTimeout on a hidden
-      // mobile tab is unreliable (browsers throttle aggressively) and
-      // even if it fires the user can't hear the OS chime anyway.
-      if (document.hidden) return;
-      pendingReminderTimer = setTimeout(() => {
-        pendingReminderTimer = null;
-        sendNotif('Un Respiro', {
-          body: body || pickWellnessTip(),
-          tag: 'auto-respiro'
-        });
-      }, delayMs);
-    }
-    // Hide any pending reminder the moment the user backgrounds the
-    // tab; re-firing on visibility return would feel noisy.
-    document.addEventListener('visibilitychange', clearPendingReminder);
-
-    // Manual "Enviar recordatorio ahora" button — we deliberately do
-    // NOT chain a permission prompt from this button, that would be
-    // an unrequested UX surprise. sendNotif will record the attempt
-    // as 'denied' if the bell hasn't been enabled, which is honest.
-    const notifSendBtn = document.getElementById('notifSendBtn');
-    if (notifSendBtn) {
-      notifSendBtn.addEventListener('click', sendManualReminder);
-    }
-
-    // Auto-reminder after a bad-zoned ficha. We register a SECOND
-    // listener on the same element, AFTER the existing generarBtn
-    // handler, so by the time we run `lastTimeIdx` has already been
-    // updated synchronously to the new zone index. Listeners on the
-    // same element fire in registration order, so this is reliable
-    // — no need for a setTimeout dance.
-    generarBtn.addEventListener('click', () => {
-      if (lastTimeIdx < 3) {           // blue/green/yellow zones
-        clearPendingReminder();
-        return;
-      }
-      // orange (3) or red (4): schedule a soft 10-second reminder.
-      const app = (appValue || '').trim() || 'esa app';
-      scheduleAutoReminder(
-        10000,
-        'Has pasado mucho tiempo en ' + app + '. ' + pickWellnessTip()
-      );
-    });
-
-    /* =====================================================================
-       UPDATE-DETECTION: RED DOT ON THE REFRESH BUTTON
-       =====================================================================
-       Static deploys (e.g. GitHub Pages) overwrite the same `index.html`
-       on every commit; the user's browser keeps serving the OLD HTML
-       from cache, so they never see the new version unless they do a
-       hard reload. We solve this by embedding `<meta name="app-version">`
-       and re-fetching the page (cache-bypass) on load: if the version
-       string in the freshly-fetched HTML differs from the one this
-       script was loaded with, set `data-update="true"` on .refresh-btn
-       and the CSS paints a red pulsing dot.
-
-       Awareness when this fails (all silent, the user just won't see
-       the dot — never a wrong indicator):
-         - file:// origins (Chrome blocks fetch() of local files)
-         - Offline / CSP blocks the fetch
-         - CDN with stale data: `cache: 'no-store'` + a unique query
-           param defeat browser cache but can't defeat an upstream CDN
-           that's still serving stale data — worst case is a delayed
-           indicator.
-       ===================================================================== */
-    const APP_VERSION = 'v1';
-    function readLocalAppVersion() {
-      try {
-        const meta = document.querySelector('meta[name="app-version"]');
-        return meta && meta.getAttribute('content');
-      } catch (_) { return null; }
-    }
-    function setUpdateAvailable(yes) {
-      try { refreshBtn.dataset.update = yes ? 'true' : 'false'; }
-      catch (_) { /* refreshBtn may not exist in extremely old layouts */ }
-    }
-    async function checkForUpdate() {
-      try {
-        // Re-use the same cache-busting approach the refresh button
-        // already uses: append `_v=now` and drop any existing version.
-        const url = new URL(location.href);
-        url.searchParams.set('_v', Date.now().toString());
-        const resp = await fetch(url.href, { cache: 'no-store' });
-        if (!resp.ok) return;
-        // DOMParser is safer than regex for embedded HTML parsing.
-        const doc = new DOMParser().parseFromString(
-          await resp.text(), 'text/html'
-        );
-        const remoteMeta = doc.querySelector('meta[name="app-version"]');
-        const remoteVersion = remoteMeta && remoteMeta.getAttribute('content');
-        const localVersion  = readLocalAppVersion();
-        // Bail on missing values so a half-rendered page can't trigger
-        // a false-positive red dot.
-        if (!remoteVersion || !localVersion) return;
-        setUpdateAvailable(remoteVersion !== localVersion);
-      } catch (_) {
-        // file://, CSP, network — silent fail.
-      }
-    }
-    // Defer the first check so it doesn't compete with critical paint
-    // or the welcome-chime setTimeout(0). applyBellState already called
-    // syncNotifSendBtnState() during init, so no extra initial paint is
-    // needed here.
-    setTimeout(checkForUpdate, 2500);
-</script>
+  </script>
 
 
 </body></html>

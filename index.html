@@ -53,6 +53,32 @@
       } catch (_) { /* ignore */ }
     })();
   </script>
+  <script>
+    // --- iOS keyboard workaround ----------------------------------
+    // On iPhone Safari, tapping an <input> that lives inside a
+    // `position: fixed` + `overflow: auto` container (.main) sometimes
+    // briefly focuses and then blurs the input before the virtual
+    // keyboard can attach — so the field looks focused but no keyboard
+    // appears. Re-calling `.focus()` on the next event-loop tick, after
+    // the initial focus/blur cycle resolves, makes iOS reliably bring
+    // the keyboard up. This is the standard, well-known iOS fix and
+    // pairs with the `user-select: text` / `touch-callout: default`
+    // CSS rules on the inputs above.
+    (function () {
+      var IOS_INPUT_SELECTOR = 'input[type="text"], textarea, .app-custom-input';
+      document.addEventListener('focusin', function (e) {
+        var t = e.target;
+        if (!t || !t.matches || !t.matches(IOS_INPUT_SELECTOR)) return;
+        // Defer to the next tick so the natural focus/blur cycle from
+        // iOS Safari's scroll-into-view attempt has time to settle.
+        // If the input is still not the active element after that, we
+        // re-focus it, which is what brings the virtual keyboard up.
+        setTimeout(function () {
+          if (document.activeElement !== t) t.focus();
+        }, 0);
+      });
+    })();
+  </script>
   <style>
     /* --- Theme: dark (default) --- */
     :root,
@@ -547,6 +573,25 @@
     }
     .app-custom-input:focus {
       border-bottom-color: #4f6d8a;
+    }
+    /* --- iOS keyboard fix ---
+       The text inputs of the questionnaire (`.question input[type="text"]`
+       and `.app-custom-input`) live inside `.main`, which is a
+       `position: fixed` + `overflow-y: auto` container. On iPhone
+       Safari that combination is a known footgun: when the user taps an
+       input, iOS briefly focuses and then blurs it before the virtual
+       keyboard can attach, so the field looks focused but no keyboard
+       appears. Forcing `user-select: text` and `touch-callout: default`
+       on the input itself (instead of relying on inheritance) tells iOS
+       the tap should be treated as a real text-focus gesture, which is
+       the CSS half of the workaround; the JS half is the `focusin`
+       re-focus handler at the end of the file. */
+    .question input[type="text"],
+    .app-custom-input,
+    textarea {
+      -webkit-user-select: text;
+      user-select: text;
+      -webkit-touch-callout: default;
     }
     .checkbox-list {
       border: none;

@@ -40,6 +40,18 @@
         );
       } catch (_) { /* ignore */ }
     })();
+    // Resolve Frutiger Aereo theme before paint to avoid flash of
+    // glassmorphic styles arriving after the basic palette has already
+    // painted. The Frutiger Aereo transformation is independent of the
+    // light/dark toggle — once activated, the entire interface is
+    // overridden regardless of the stored `theme`.
+    (function () {
+      try {
+        if (localStorage.getItem('faTheme') === 'aero') {
+          document.documentElement.setAttribute('data-fa', 'aero');
+        }
+      } catch (_) { /* ignore */ }
+    })();
   </script>
   <style>
     /* --- Theme: dark (default) --- */
@@ -786,6 +798,90 @@
       border-radius: 6px;
     }
 
+    /* --- Temas submenu (works in both basic and Frutiger Aero) --- */
+    .temas-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .temas-toggle {
+      position: relative;
+    }
+    .temas-chevron {
+      margin-left: auto;
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+      color: var(--text-muted);
+      transition: transform var(--transition), color var(--transition);
+    }
+    .temas-toggle:hover .temas-chevron { color: var(--text); }
+    .temas-toggle[aria-expanded="true"] .temas-chevron {
+      transform: rotate(-180deg);
+      color: var(--text);
+    }
+    /* The sub-options are slightly inset so they read as a hierarchy:
+       child of child, graduated into the main nav. */
+    .temas-submenu {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding-left: 14px;
+      margin-left: 6px;
+      border-left: 1px solid var(--bg-sidebar-hover);
+      transition: max-height var(--transition), opacity var(--transition);
+      max-height: 200px;
+      overflow: hidden;
+      opacity: 1;
+    }
+    .temas-submenu[hidden] {
+      display: none;
+    }
+    .nav-item.nav-item-sub {
+      padding: 8px 10px;
+      font-size: 13px;
+      gap: 10px;
+    }
+    .nav-item.nav-item-sub .check-dot {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+      border-radius: 50%;
+      border: 1.6px solid var(--text-muted);
+      background: transparent;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color var(--transition), background-color var(--transition);
+    }
+    /* The filled dot indicates the currently selected tema. We use
+       the dot inside the option's button (not an aria-current attr)
+       so the indicator is visible to everyone, including keyboard
+       users who aren't tabbing through the radios. */
+    .tema-option.is-selected {
+      color: var(--text);
+    }
+    .tema-option.is-selected .check-dot {
+      border-color: #4f6d8a;
+      background: #4f6d8a;
+    }
+    .tema-option.is-selected .check-dot::after {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--toggle-knob, #f0f0f0);
+    }
+    /* Light mode: white dot inside a darker fill so the indicator
+       stays legible against the brighter Bg. */
+    [data-theme="light"] .tema-option.is-selected .check-dot::after {
+      background: var(--toggle-knob, #ffffff);
+    }
+    [data-theme="light"] .tema-option.is-selected .check-dot {
+      border-color: #4f6d8a;
+      background: #4f6d8a;
+    }
+
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(8px); }
       to   { opacity: 1; transform: translateY(0); }
@@ -1311,9 +1407,1122 @@
         transition-duration: 0.01ms !important;
       }
     }
+
+    /* =====================================================
+       FRUTIGER AERO THEME
+       Triggered when html[data-fa="aero"] is set. Overrides every
+       relevant CSS variable + structural surface with the
+       skeuomorphic, watery, sunlit aesthetic. Designed to coexist with
+       the existing light/dark toggle: while this attribute is set,
+       the FA palette wins at every level so the basic theme is hidden.
+       Only structural rules (padding, width, margin, display,
+       font-size) are intentionally left alone — they still match the
+       baseline so the existing mobile breakpoints keep their layout.
+       ===================================================== */
+    html[data-fa="aero"] {
+      /* Palette overrides that propagate through the existing rules. */
+      --bg-main: linear-gradient(180deg,
+        #88dbff 0%,
+        #b6e9ff 28%,
+        #d8f6ff 55%,
+        #e9fff4 80%,
+        #d5f4d0 100%);
+      --bg-sidebar: rgba(255, 255, 255, 0.55);
+      --bg-sidebar-hover: rgba(255, 255, 255, 0.78);
+      --text: #06304a;
+      --text-muted: #4a7b97;
+      --shadow:
+        4px 0 30px rgba(80, 150, 200, 0.25),
+        inset 1px 0 0 rgba(255, 255, 255, 0.85);
+      --toggle-track-off: rgba(255, 255, 255, 0.6);
+      --toggle-track-on: linear-gradient(180deg, #74d888 0%, #2faa5e 100%);
+      --toggle-knob: #ffffff;
+      --toggle-knob-icon: #2faa5e;
+      --spark-color: #ffe57a;
+      --spark-glow: rgba(255, 230, 145, 0.9);
+      --spark-core: rgba(255, 255, 255, 1);
+
+      /* Reusable wet‑glass / glossy bevel recipes for individual surfaces. */
+      --fa-glass-bg: linear-gradient(180deg,
+        rgba(255, 255, 255, 0.82) 0%,
+        rgba(255, 255, 255, 0.55) 55%,
+        rgba(220, 240, 255, 0.45) 100%);
+      --fa-glass-border: 1px solid rgba(255, 255, 255, 0.85);
+      --fa-inset-bevel:
+        inset 0 1px 0 rgba(255, 255, 255, 0.95),
+        inset 0 -1.5px 0 rgba(80, 140, 200, 0.18);
+      --fa-aurora:
+        radial-gradient(ellipse at 25% 20%, rgba(180, 230, 255, 0.7) 0%, transparent 55%),
+        radial-gradient(ellipse at 78% 30%, rgba(255, 255, 255, 0.55) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 80%, rgba(190, 250, 200, 0.5) 0%, transparent 50%);
+    }
+
+    /* Body: animate the aurora gradient gently so it feels alive; clip
+       to its own box so horizontal drift never reveals a scrollbar. */
+    html[data-fa="aero"] body {
+      background:
+        var(--fa-aurora),
+        linear-gradient(180deg,
+          #88dbff 0%, #b6e9ff 28%, #d8f6ff 55%,
+          #e9fff4 80%, #d5f4d0 100%);
+      background-attachment: fixed;
+      background-size: 220% 220%, 100% 100%;
+      animation: faAurora 32s ease-in-out infinite;
+      font-family: "Frutiger", "Segoe UI", "Segoe UI Variable",
+        -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+      font-weight: 400;
+      letter-spacing: 0.4px;
+      color: var(--text);
+    }
+    @keyframes faAurora {
+      0%, 100% { background-position: 0% 0%, 0% 0%; }
+      50%      { background-position: 8% 4%, 0% 0%; }
+    }
+
+    /* Sidebar: glass w/ subtle aqua tint and inset bevel */
+    html[data-fa="aero"] .sidebar {
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.7) 0%, rgba(220, 245, 255, 0.55) 100%);
+      backdrop-filter: blur(22px) saturate(1.4);
+      -webkit-backdrop-filter: blur(22px) saturate(1.4);
+      border-right: 1px solid rgba(255, 255, 255, 0.6);
+      box-shadow:
+        4px 0 30px rgba(80, 150, 200, 0.25),
+        inset 1px 0 0 rgba(255, 255, 255, 0.85),
+        inset -1px 0 0 rgba(80, 140, 200, 0.18);
+    }
+
+    /* Sidebar collapse toggle */
+    html[data-fa="aero"] .toggle-btn {
+      background: rgba(255, 255, 255, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.75);
+      box-shadow: var(--fa-inset-bevel);
+      color: #06304a;
+    }
+    html[data-fa="aero"] .toggle-btn:hover {
+      background: rgba(255, 255, 255, 0.85);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 1),
+        0 4px 16px rgba(80, 150, 200, 0.22);
+      color: #06304a;
+    }
+
+    /* Nav items: glossy bevel + vibrant green active state */
+    html[data-fa="aero"] .nav-item {
+      background: rgba(255, 255, 255, 0.42);
+      border: 1px solid rgba(255, 255, 255, 0.65);
+      border-radius: 10px;
+      box-shadow: var(--fa-inset-bevel);
+      color: #06304a;
+      font-weight: 500;
+    }
+    html[data-fa="aero"] .nav-item:hover {
+      background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(220, 240, 255, 0.65));
+      color: #06304a;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 1),
+        0 4px 14px rgba(80, 150, 200, 0.22);
+      transform: translateY(-1px);
+    }
+    html[data-fa="aero"] .nav-item.is-active {
+      background: linear-gradient(180deg, #74d888 0%, #2faa5e 100%);
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      color: #ffffff;
+      text-shadow: 0 1px 2px rgba(15, 90, 50, 0.4);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.6),
+        inset 0 -2px 0 rgba(15, 90, 50, 0.32),
+        0 4px 14px rgba(47, 170, 94, 0.45);
+    }
+    html[data-fa="aero"] .nav-item svg { color: inherit; }
+
+    /* Temas sub-options (smaller, slightly recessed) */
+    html[data-fa="aero"] .nav-item.nav-item-sub {
+      background: rgba(255, 255, 255, 0.32);
+      font-size: 13px;
+      padding: 7px 10px;
+    }
+    html[data-fa="aero"] .nav-item.nav-item-sub .check-dot {
+      border-color: rgba(80, 140, 200, 0.4);
+      background: rgba(255, 255, 255, 0.85);
+    }
+    html[data-fa="aero"] .tema-option.is-selected {
+      background: linear-gradient(180deg, rgba(116, 216, 136, 0.32), rgba(47, 170, 94, 0.18));
+      color: #06304a;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.6),
+        inset 0 -1px 0 rgba(47, 170, 94, 0.2);
+    }
+    html[data-fa="aero"] .tema-option.is-selected .check-dot {
+      border-color: #2faa5e;
+      background: linear-gradient(180deg, #74d888, #2faa5e);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.55),
+        0 0 0 1px rgba(255, 255, 255, 0.65);
+    }
+    html[data-fa="aero"] .tema-option.is-selected .check-dot::after {
+      background: #ffffff;
+    }
+    html[data-fa="aero"] .temas-submenu {
+      border-left-color: rgba(80, 140, 200, 0.32);
+    }
+    html[data-fa="aero"] .temas-chevron { color: #4a7b97; }
+
+    /* Theme switch (dark/light) — bright glass capsule */
+    html[data-fa="aero"] .theme-switch {
+      background: rgba(255, 255, 255, 0.42);
+      border: 1px solid rgba(255, 255, 255, 0.65);
+      border-radius: 10px;
+      box-shadow: var(--fa-inset-bevel);
+      color: #06304a;
+    }
+    html[data-fa="aero"] .theme-switch:hover {
+      background: rgba(255, 255, 255, 0.78);
+      color: #06304a;
+    }
+    html[data-fa="aero"] .theme-switch > svg { color: #4a7b97; }
+    html[data-fa="aero"] .switch .track {
+      background: rgba(255, 255, 255, 0.7);
+      box-shadow: inset 0 1px 2px rgba(50, 100, 130, 0.18);
+    }
+    html[data-fa="aero"][data-theme="light"] .switch .track {
+      background: linear-gradient(180deg, #74d888 0%, #2faa5e 100%);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.55),
+        inset 0 -1px 0 rgba(15, 90, 50, 0.25);
+    }
+    html[data-fa="aero"] .switch .knob {
+      background: linear-gradient(180deg, #ffffff, #e0f1ff);
+      box-shadow:
+        0 1px 3px rgba(0, 0, 0, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.85);
+      color: #2faa5e;
+    }
+
+    /* Cards (ficha, result, notif, dropdown menu): glass */
+    html[data-fa="aero"] .ficha-card,
+    html[data-fa="aero"] .result-card,
+    html[data-fa="aero"] .notif-card {
+      background: var(--fa-glass-bg);
+      border: var(--fa-glass-border);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 1),
+        0 18px 50px rgba(60, 130, 190, 0.3),
+        0 0 0 1px rgba(255, 255, 255, 0.55);
+      backdrop-filter: blur(22px) saturate(1.3);
+      -webkit-backdrop-filter: blur(22px) saturate(1.3);
+      border-radius: 22px;
+      color: #06304a;
+    }
+    html[data-fa="aero"] .ficha-card *,
+    html[data-fa="aero"] .result-card *,
+    html[data-fa="aero"] .notif-card * {
+      color: inherit;
+    }
+    html[data-fa="aero"] .notif-card.is-denied,
+    html[data-fa="aero"] .notif-card.is-unsupported,
+    html[data-fa="aero"] .notif-card.is-error {
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 1),
+        0 12px 40px rgba(60, 130, 190, 0.25),
+        inset 4px 0 0 var(--notif-accent);
+    }
+    html[data-fa="aero"] .notif-card.is-denied      { --notif-accent: #ef4444; }
+    html[data-fa="aero"] .notif-card.is-unsupported { --notif-accent: #94a3b8; }
+    html[data-fa="aero"] .notif-card.is-error       { --notif-accent: #c2410c; }
+
+    /* Question labels and headings */
+    html[data-fa="aero"] .question > label,
+    html[data-fa="aero"] .question > legend {
+      color: #06304a;
+      font-weight: 500;
+    }
+    html[data-fa="aero"] .result-subhead {
+      color: #2faa5e;
+    }
+    html[data-fa="aero"] .view-heading {
+      color: #06304a;
+      font-weight: 300;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+    }
+    /* The home greeting gets a bright green→blue gradient text colour */
+    html[data-fa="aero"] .greeting {
+      background: linear-gradient(180deg, #2faa5e 0%, #4ea8d8 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: none;
+      filter: drop-shadow(0 2px 6px rgba(255, 255, 255, 0.65));
+    }
+
+    /* Inputs: aqua‑tinted bottom border that becomes a vivid blue on focus */
+    html[data-fa="aero"] .question input[type="text"],
+    html[data-fa="aero"] .app-custom-input,
+    html[data-fa="aero"] .app-dropdown-trigger {
+      border-bottom: 2.5px solid rgba(80, 160, 220, 0.5);
+      color: #06304a;
+      font-weight: 400;
+    }
+    html[data-fa="aero"] .question input[type="text"]:focus,
+    html[data-fa="aero"] .app-custom-input:focus,
+    html[data-fa="aero"] .app-dropdown-trigger:focus-visible {
+      border-bottom-color: #2f86e0;
+    }
+    html[data-fa="aero"] .app-dropdown-trigger.is-empty { color: #6a9bbb; }
+    html[data-fa="aero"] .app-dropdown-chevron { color: #4a7b97; }
+    html[data-fa="aero"] .app-custom-input::placeholder {
+      color: #6a9bbb;
+    }
+
+    /* Dropdown menu (opened list) */
+    html[data-fa="aero"] .app-dropdown-menu {
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.95);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 1),
+        0 16px 40px rgba(50, 110, 170, 0.32);
+      backdrop-filter: blur(22px) saturate(1.2);
+      -webkit-backdrop-filter: blur(22px) saturate(1.2);
+      border-radius: 14px;
+    }
+    html[data-fa="aero"] .app-dropdown-menu li { color: #06304a; }
+    html[data-fa="aero"] .app-dropdown-menu li:hover {
+      background: linear-gradient(180deg, rgba(116, 216, 136, 0.42), rgba(47, 170, 94, 0.18));
+    }
+    html[data-fa="aero"] .app-dropdown-menu li.is-selected {
+      background: linear-gradient(180deg, rgba(116, 216, 136, 0.5), rgba(47, 170, 94, 0.25));
+      box-shadow: inset 2px 0 0 #2faa5e;
+      color: #06304a;
+    }
+
+    /* Radios: glossy, with green gradient fill when checked */
+    html[data-fa="aero"] .checkbox-list label { color: #06304a; }
+    html[data-fa="aero"] .checkbox-list input[type="radio"] {
+      border: 1.5px solid rgba(80, 140, 200, 0.4);
+      background: rgba(255, 255, 255, 0.85);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    }
+    html[data-fa="aero"] .checkbox-list input[type="radio"]:checked {
+      border-color: #2faa5e;
+      background: linear-gradient(180deg, #74d888, #2faa5e);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.55),
+        inset 0 0 0 3px #ffffff;
+    }
+    html[data-fa="aero"] .checkbox-list input[type="radio"]:focus-visible {
+      outline: 2px solid #6cc6ff;
+      outline-offset: 2px;
+    }
+
+    /* Generar button — bright blue glossy bevel with white inner sheen */
+    html[data-fa="aero"] .generar-btn {
+      background: linear-gradient(180deg, #6cc6ff 0%, #2f86e0 100%);
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      border-radius: 14px;
+      text-shadow: 0 1px 2px rgba(20, 60, 130, 0.4);
+      box-shadow:
+        inset 0 1.5px 0 rgba(255, 255, 255, 0.9),
+        inset 0 -2.5px 0 rgba(20, 60, 130, 0.4),
+        0 6px 22px rgba(50, 130, 220, 0.45),
+        0 0 0 1px rgba(255, 255, 255, 0.4);
+    }
+    html[data-fa="aero"] .generar-btn:hover {
+      background: linear-gradient(180deg, #80d2ff 0%, #3690ea 100%);
+      box-shadow:
+        inset 0 1.5px 0 rgba(255, 255, 255, 1),
+        inset 0 -2.5px 0 rgba(20, 60, 130, 0.4),
+        0 10px 28px rgba(50, 130, 220, 0.6),
+        0 0 0 1px rgba(255, 255, 255, 0.5);
+      transform: translateY(-1px);
+    }
+    html[data-fa="aero"] .generar-btn:focus-visible {
+      outline: 2px solid #6cc6ff;
+      outline-offset: 3px;
+    }
+    html[data-fa="aero"] .generar-btn:disabled,
+    html[data-fa="aero"] .generar-btn:disabled:hover {
+      background: linear-gradient(180deg, rgba(200, 220, 240, 0.85), rgba(170, 200, 230, 0.78));
+      color: #e0eaf2;
+      text-shadow: none;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.6),
+        inset 0 -2px 0 rgba(120, 160, 200, 0.28),
+        0 2px 8px rgba(80, 130, 170, 0.18);
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Threshold bars → glossy capsules. Active segment gets an extra
+       cyan glow ring WITHOUT redefining transform (which would break
+       the existing scale‑up animation). */
+    html[data-fa="aero"] .segment {
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.85),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.15),
+        0 2px 6px rgba(60, 110, 160, 0.22);
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+    html[data-fa="aero"] .segment.is-active {
+      box-shadow:
+        inset 0 1.5px 0 rgba(255, 255, 255, 0.95),
+        0 0 0 3px #ffffff,
+        0 8px 22px rgba(60, 130, 190, 0.42),
+        0 0 32px rgba(120, 200, 255, 0.6);
+    }
+
+    /* Bar chart tracks: frosted aqua */
+    html[data-fa="aero"] .bar-track {
+      background: rgba(220, 240, 255, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.7),
+        inset 0 -1px 0 rgba(80, 140, 200, 0.18);
+    }
+    html[data-fa="aero"] .bar-name  { color: #4a7b97; }
+    html[data-fa="aero"] .bar-value { color: #06304a; }
+    html[data-fa="aero"] .bar-chart-msg { color: #06304a; font-weight: 500; }
+    html[data-fa="aero"] .bar-fill { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4); }
+
+    /* Zone colours: brighten the strong `<strong>` tonal accents so
+       they stay legible against the glass cards. */
+    html[data-fa="aero"] .result-card[data-zone="0"] .result-summary strong { color: #2f86e0; }
+    html[data-fa="aero"] .result-card[data-zone="1"] .result-summary strong { color: #2faa5e; }
+    html[data-fa="aero"] .result-card[data-zone="2"] .result-summary strong { color: #c08a17; }
+    html[data-fa="aero"] .result-card[data-zone="3"] .result-summary strong { color: #cc5a16; }
+    html[data-fa="aero"] .result-card[data-zone="4"] .result-summary strong { color: #c4334c; }
+    html[data-fa="aero"] .bar-chart-msg[data-zone="0"] { color: #2f86e0; }
+    html[data-fa="aero"] .bar-chart-msg[data-zone="1"] { color: #2faa5e; }
+    html[data-fa="aero"] .bar-chart-msg[data-zone="2"] { color: #c08a17; }
+    html[data-fa="aero"] .bar-chart-msg[data-zone="3"] { color: #cc5a16; }
+    html[data-fa="aero"] .bar-chart-msg[data-zone="4"] { color: #c4334c; }
+
+    /* Floating top-right buttons + notifications list header buttons */
+    html[data-fa="aero"] .bell-btn,
+    html[data-fa="aero"] .refresh-btn,
+    html[data-fa="aero"] .notif-clear-btn {
+      background: rgba(255, 255, 255, 0.55);
+      border: 1px solid rgba(255, 255, 255, 0.85);
+      color: #06304a;
+      box-shadow: var(--fa-inset-bevel);
+    }
+    html[data-fa="aero"] .bell-btn:hover,
+    html[data-fa="aero"] .refresh-btn:hover,
+    html[data-fa="aero"] .notif-clear-btn:hover {
+      background: rgba(255, 255, 255, 0.85);
+      border-color: rgba(255, 255, 255, 1);
+      color: #2faa5e;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 1),
+        0 4px 14px rgba(50, 130, 190, 0.22);
+    }
+    html[data-fa="aero"] .notif-clear-btn:hover {
+      background: rgba(255, 240, 240, 0.92);
+      border-color: rgba(239, 68, 68, 0.45);
+      color: #c4334c;
+    }
+    html[data-fa="aero"] .notif-title { color: #06304a; }
+    html[data-fa="aero"] .notif-time  { color: #4a7b97; }
+    html[data-fa="aero"] .notif-empty { color: #4a7b97; }
+
+    /* Mobile topbar + drawer overlay */
+    html[data-fa="aero"] .mobile-topbar {
+      background: rgba(255, 255, 255, 0.62);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.7);
+      box-shadow: 0 2px 10px rgba(80, 140, 200, 0.18);
+      backdrop-filter: blur(22px) saturate(1.4);
+      -webkit-backdrop-filter: blur(22px) saturate(1.4);
+      color: #06304a;
+    }
+    html[data-fa="aero"] .topbar-title { color: #06304a; }
+    html[data-fa="aero"] .hamburger-btn {
+      background: rgba(255, 255, 255, 0.55);
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      color: #06304a;
+      box-shadow: var(--fa-inset-bevel);
+    }
+    html[data-fa="aero"] .drawer-overlay { background: rgba(15, 60, 90, 0.35); }
+    html[data-fa="aero"] .main::-webkit-scrollbar-thumb {
+      background-color: rgba(80, 150, 200, 0.45);
+    }
+
+    /* Lighten the dark‑mode bloom so it doesn't punch a dark hole over
+       the bright sky background (it still reads as a ripple). */
+    html[data-fa="aero"] .theme-bloom,
+    html[data-fa="aero"] .theme-halo {
+      mix-blend-mode: screen;
+    }
+
+    /* =====================================================
+       FRUTIGER AERO — floating bubble layer
+       Always in the DOM but display:none until data-fa="aero".
+       Sits at z-index 0 (behind the fixed sidebar / main / topbar
+       which are z-index 10/30/40/50 respectively), so sprinkles float
+       behind the chrome but above the body gradient.
+       ===================================================== */
+    .fa-bubbles {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    html[data-fa="aero"] .fa-bubbles { display: block; }
+    .fa-bubble {
+      position: absolute;
+      left: var(--x);
+      top: var(--y);
+      width: var(--size, 60px);
+      height: var(--size, 60px);
+      border-radius: 50%;
+      background: radial-gradient(circle at 32% 28%,
+        rgba(255, 255, 255, 0.95) 0%,
+        rgba(255, 255, 255, 0.55) 30%,
+        rgba(180, 230, 255, 0.18) 75%,
+        transparent 100%);
+      box-shadow:
+        inset -3px -6px 12px rgba(80, 150, 200, 0.3),
+        inset 3px 5px 8px rgba(255, 255, 255, 0.75),
+        0 6px 24px rgba(80, 150, 200, 0.18);
+      animation: faBubbleFloat var(--dur, 18s) ease-in-out infinite;
+      animation-delay: var(--delay, 0s);
+      opacity: 0.85;
+      will-change: transform;
+    }
+    @keyframes faBubbleFloat {
+      0%, 100% { transform: translate(0, 0)    scale(1);    }
+      50%      { transform: translate(8px, -22px) scale(1.04); }
+    }
+    .fa-sparkle {
+      position: absolute;
+      left: var(--x);
+      top: var(--y);
+      width: var(--size, 14px);
+      height: var(--size, 14px);
+      color: #ffffff;
+      filter:
+        drop-shadow(0 0 6px rgba(255, 255, 255, 0.95))
+        drop-shadow(0 0 14px rgba(180, 230, 255, 0.6));
+      animation: faSparkle 4s ease-in-out infinite;
+      animation-delay: var(--delay, 0s);
+      opacity: 0.85;
+      will-change: transform, opacity;
+    }
+    .fa-sparkle svg { width: 100%; height: 100%; display: block; }
+    @keyframes faSparkle {
+      0%, 100% { transform: scale(0.55) rotate(0deg);   opacity: 0.25; }
+      50%      { transform: scale(1.2)  rotate(90deg);  opacity: 1;    }
+    }
+    /* Leaf accent (subtle, in corners, brings the nature vibe) */
+    .fa-leaf {
+      position: absolute;
+      left: var(--x);
+      top: var(--y);
+      width: var(--size, 64px);
+      height: var(--size, 64px);
+      opacity: 0.6;
+      filter: drop-shadow(0 4px 12px rgba(80, 150, 100, 0.2));
+      animation: faLeafSway 9s ease-in-out infinite;
+      animation-delay: var(--delay, 0s);
+      color: #2faa5e;
+      will-change: transform;
+    }
+    .fa-leaf svg { width: 100%; height: 100%; display: block; }
+    @keyframes faLeafSway {
+      0%, 100% { transform: rotate(-4deg) translate(0, 0); }
+      50%      { transform: rotate(4deg)  translate(6px, -4px); }
+    }
+    /* Pulse of light at the top right (a static sun flare) */
+    .fa-sun-flare {
+      position: absolute;
+      right: -120px;
+      top: -120px;
+      width: 520px;
+      height: 520px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 50% 50%,
+        rgba(255, 255, 220, 0.85) 0%,
+        rgba(255, 240, 180, 0.5) 30%,
+        rgba(255, 230, 140, 0.18) 60%,
+        transparent 80%);
+      filter: blur(6px);
+      animation: faSunPulse 18s ease-in-out infinite;
+      will-change: transform, opacity;
+    }
+    @keyframes faSunPulse {
+      0%, 100% { transform: scale(1);    opacity: 0.9; }
+      50%      { transform: scale(1.06); opacity: 1;   }
+    }
+
+    /* =====================================================
+       FRUTIGER AERO — DARK / BIOLUMINESCENT VARIANT
+       Activated when BOTH html[data-fa="aero"] AND html[data-theme="dark"]
+       are present. Reinterprets the bright sunny palette as a deep-sea
+       / space scene with bioluminescent accents — neon cyan, electric
+       green, smoked crystal, polished obsidian, starfield particles.
+       Structural properties (padding/width/font-size) are intentionally
+       left untouched: mobile breakpoint rules still apply.
+       ===================================================== */
+    html[data-fa="aero"][data-theme="dark"] {
+      /* Palette overrides — inherit most surfaces from these */
+      --bg-main: linear-gradient(180deg,
+        #03080d 0%,
+        #041420 28%,
+        #04222f 55%,
+        #061f2e 80%,
+        #051420 100%);
+      --bg-sidebar: rgba(7, 14, 22, 0.62);
+      --bg-sidebar-hover: rgba(15, 26, 38, 0.78);
+      --text: #cbf4ff;
+      --text-muted: #5a9ab5;
+      --shadow:
+        4px 0 30px rgba(0, 0, 0, 0.85),
+        inset 1px 0 0 rgba(0, 229, 255, 0.18);
+      --toggle-track-off: rgba(7, 14, 22, 0.7);
+      --toggle-track-on: linear-gradient(180deg, rgba(0,229,255,0.45), rgba(57,255,20,0.4));
+      --toggle-knob: #cbf4ff;
+      --toggle-knob-icon: #00e5ff;
+      --spark-color: #cbf4ff;
+      --spark-glow: rgba(0, 229, 255, 0.9);
+      --spark-core: rgba(255, 255, 255, 1);
+
+      /* Dark FA-only recipes — smoked crystal + obsidian + neon highlights */
+      --fa-glass-bg: linear-gradient(180deg,
+        rgba(7, 12, 20, 0.78) 0%,
+        rgba(5, 16, 26, 0.65) 55%,
+        rgba(3, 24, 36, 0.55) 100%);
+      --fa-glass-border: 1px solid rgba(0, 229, 255, 0.18);
+      --fa-inset-bevel:
+        inset 0 1px 0 rgba(0, 229, 255, 0.18),
+        inset 0 -1.5px 0 rgba(0, 0, 0, 0.4);
+      --fa-aurora:
+        radial-gradient(ellipse at 22% 28%, rgba(0, 229, 255, 0.32) 0%, transparent 55%),
+        radial-gradient(ellipse at 78% 22%, rgba(57, 255, 20, 0.18) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 88%, rgba(176, 38, 255, 0.22) 0%, transparent 55%),
+        radial-gradient(ellipse at 12% 78%, rgba(0, 229, 255, 0.14) 0%, transparent 50%);
+    }
+
+    /* Body: deep-sea gradient + bioluminescent auroras */
+    html[data-fa="aero"][data-theme="dark"] body {
+      background:
+        var(--fa-aurora),
+        radial-gradient(ellipse at 75% 8%, rgba(176, 38, 255, 0.18) 0%, transparent 60%),
+        linear-gradient(180deg,
+          #03080d 0%, #041420 28%, #04222f 55%,
+          #061f2e 80%, #051420 100%);
+      background-attachment: fixed;
+      background-size: 220% 220%, 100% 100%, 100% 100%;
+      animation: faAurora 36s ease-in-out infinite;
+      color: var(--text);
+      font-weight: 400;
+    }
+
+    /* Sidebar: smoked translucent crystal with cyan edge */
+    html[data-fa="aero"][data-theme="dark"] .sidebar {
+      background:
+        linear-gradient(180deg, rgba(7, 12, 20, 0.78) 0%, rgba(4, 14, 24, 0.62) 100%);
+      backdrop-filter: blur(24px) saturate(1.4);
+      -webkit-backdrop-filter: blur(24px) saturate(1.4);
+      border-right: 1px solid rgba(0, 229, 255, 0.16);
+      box-shadow:
+        4px 0 30px rgba(0, 0, 0, 0.85),
+        inset 1px 0 0 rgba(0, 229, 255, 0.18),
+        inset -1px 0 0 rgba(0, 0, 0, 0.45);
+    }
+
+    /* Toggle (collapse) — electric cyan border */
+    html[data-fa="aero"][data-theme="dark"] .toggle-btn {
+      background: rgba(7, 14, 22, 0.55);
+      border: 1px solid rgba(0, 229, 255, 0.22);
+      box-shadow: var(--fa-inset-bevel);
+      color: #00e5ff;
+    }
+    html[data-fa="aero"][data-theme="dark"] .toggle-btn:hover {
+      background: rgba(0, 229, 255, 0.08);
+      box-shadow:
+        inset 0 1px 0 rgba(0, 229, 255, 0.4),
+        0 4px 18px rgba(0, 229, 255, 0.22);
+      color: #39ff14;
+    }
+
+    /* Nav items: smoked glass with electric-green glow on active */
+    html[data-fa="aero"][data-theme="dark"] .nav-item {
+      background: rgba(7, 14, 22, 0.55);
+      border: 1px solid rgba(0, 229, 255, 0.16);
+      border-radius: 10px;
+      box-shadow: var(--fa-inset-bevel);
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    html[data-fa="aero"][data-theme="dark"] .nav-item:hover {
+      background: rgba(0, 229, 255, 0.08);
+      border-color: rgba(0, 229, 255, 0.42);
+      color: #cbf4ff;
+      box-shadow:
+        inset 0 1px 0 rgba(0, 229, 255, 0.32),
+        0 4px 18px rgba(0, 229, 255, 0.22);
+      transform: translateY(-1px);
+    }
+    html[data-fa="aero"][data-theme="dark"] .nav-item.is-active {
+      background: linear-gradient(180deg, rgba(0,229,255,0.18), rgba(57,255,20,0.16));
+      border: 1px solid rgba(57, 255, 20, 0.48);
+      color: #39ff14;
+      text-shadow: 0 0 6px rgba(57, 255, 20, 0.65);
+      box-shadow:
+        inset 0 1px 0 rgba(57, 255, 20, 0.5),
+        inset 0 -2px 0 rgba(0, 80, 20, 0.45),
+        0 4px 16px rgba(57, 255, 20, 0.32),
+        0 0 18px rgba(57, 255, 20, 0.22);
+    }
+    html[data-fa="aero"][data-theme="dark"] .nav-item svg { color: inherit; }
+
+    /* Sub-options (Temas) */
+    html[data-fa="aero"][data-theme="dark"] .nav-item.nav-item-sub {
+      background: rgba(7, 14, 22, 0.45);
+      font-size: 13px;
+      padding: 7px 10px;
+    }
+    html[data-fa="aero"][data-theme="dark"] .nav-item.nav-item-sub .check-dot {
+      border-color: rgba(0, 229, 255, 0.35);
+      background: rgba(7, 14, 22, 0.6);
+    }
+    html[data-fa="aero"][data-theme="dark"] .tema-option.is-selected {
+      background: linear-gradient(180deg, rgba(57, 255, 20, 0.16), rgba(0, 229, 255, 0.14));
+      color: #cbf4ff;
+      box-shadow:
+        inset 0 1px 0 rgba(57, 255, 20, 0.4),
+        inset 0 -1px 0 rgba(0, 80, 20, 0.3),
+        0 2px 8px rgba(57, 255, 20, 0.18);
+    }
+    html[data-fa="aero"][data-theme="dark"] .tema-option.is-selected .check-dot {
+      border-color: #39ff14;
+      background: linear-gradient(180deg, #00e5ff, #39ff14);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.45),
+        0 0 0 1px rgba(0, 229, 255, 0.55),
+        0 0 14px rgba(57, 255, 20, 0.45);
+    }
+    html[data-fa="aero"][data-theme="dark"] .tema-option.is-selected .check-dot::after {
+      background: #ffffff;
+    }
+    html[data-fa="aero"][data-theme="dark"] .temas-submenu {
+      border-left-color: rgba(0, 229, 255, 0.3);
+    }
+    html[data-fa="aero"][data-theme="dark"] .temas-chevron { color: #00e5ff; }
+
+    /* Theme switch (dark/light) — neon track on cyan-to-green */
+    html[data-fa="aero"][data-theme="dark"] .theme-switch {
+      background: rgba(7, 14, 22, 0.55);
+      border: 1px solid rgba(0, 229, 255, 0.16);
+      border-radius: 10px;
+      box-shadow: var(--fa-inset-bevel);
+      color: var(--text-muted);
+    }
+    html[data-fa="aero"][data-theme="dark"] .theme-switch:hover {
+      background: rgba(0, 229, 255, 0.08);
+      color: #cbf4ff;
+    }
+    html[data-fa="aero"][data-theme="dark"] .theme-switch > svg { color: #00e5ff; }
+    html[data-fa="aero"][data-theme="dark"] .switch .track {
+      background: rgba(7, 14, 22, 0.75);
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.55);
+    }
+    /* When the user is in dark-Aero and flips the global theme switch
+       to "light", they snap BACK to the bright sunny Aero variant,
+       which has its own track gradient defined higher up in the light
+       block (`html[data-fa="aero"][data-theme="light"] .switch .track`)
+       so we don't redefine it here. */
+    html[data-fa="aero"][data-theme="dark"] .switch .knob {
+      background: linear-gradient(180deg, #cbf4ff, #2a8aab);
+      box-shadow:
+        0 1px 3px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.55),
+        0 0 12px rgba(0, 229, 255, 0.32);
+      color: #00e5ff;
+    }
+
+    /* Cards: smoked crystal with bioluminescent halo */
+    html[data-fa="aero"][data-theme="dark"] .ficha-card,
+    html[data-fa="aero"][data-theme="dark"] .result-card,
+    html[data-fa="aero"][data-theme="dark"] .notif-card {
+      background: var(--fa-glass-bg);
+      border: var(--fa-glass-border);
+      box-shadow:
+        inset 0 1px 0 rgba(0, 229, 255, 0.22),
+        0 18px 50px rgba(0, 0, 0, 0.7),
+        0 0 40px rgba(0, 229, 255, 0.08),
+        0 0 0 1px rgba(0, 229, 255, 0.1);
+      backdrop-filter: blur(24px) saturate(1.45);
+      -webkit-backdrop-filter: blur(24px) saturate(1.45);
+      border-radius: 22px;
+      color: var(--text);
+    }
+    html[data-fa="aero"][data-theme="dark"] .ficha-card *,
+    html[data-fa="aero"][data-theme="dark"] .result-card *,
+    html[data-fa="aero"][data-theme="dark"] .notif-card * {
+      color: inherit;
+    }
+    html[data-fa="aero"][data-theme="dark"] .notif-card.is-denied,
+    html[data-fa="aero"][data-theme="dark"] .notif-card.is-unsupported,
+    html[data-fa="aero"][data-theme="dark"] .notif-card.is-error {
+      box-shadow:
+        inset 0 1px 0 rgba(0, 229, 255, 0.22),
+        0 12px 40px rgba(0, 0, 0, 0.65),
+        inset 4px 0 0 var(--notif-accent);
+    }
+    html[data-fa="aero"][data-theme="dark"] .notif-card.is-denied      { --notif-accent: #ff0055; }
+    html[data-fa="aero"][data-theme="dark"] .notif-card.is-unsupported { --notif-accent: #6b7e92; }
+    html[data-fa="aero"][data-theme="dark"] .notif-card.is-error       { --notif-accent: #ff7700; }
+
+    /* Question labels / headings */
+    html[data-fa="aero"][data-theme="dark"] .question > label,
+    html[data-fa="aero"][data-theme="dark"] .question > legend {
+      color: #cbf4ff;
+      font-weight: 500;
+    }
+    html[data-fa="aero"][data-theme="dark"] .result-subhead {
+      color: #00e5ff;
+    }
+    html[data-fa="aero"][data-theme="dark"] .view-heading {
+      color: #cbf4ff;
+      font-weight: 300;
+      text-shadow: 0 0 12px rgba(0, 229, 255, 0.22);
+    }
+    /* Greeting: tri-stop neon gradient */
+    html[data-fa="aero"][data-theme="dark"] .greeting {
+      background: linear-gradient(180deg, #39ff14 0%, #00e5ff 60%, #b026ff 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: none;
+      filter:
+        drop-shadow(0 0 8px rgba(0, 229, 255, 0.45))
+        drop-shadow(0 0 18px rgba(57, 255, 20, 0.28));
+    }
+
+    /* Inputs / dropdown bottom border */
+    html[data-fa="aero"][data-theme="dark"] .question input[type="text"],
+    html[data-fa="aero"][data-theme="dark"] .app-custom-input,
+    html[data-fa="aero"][data-theme="dark"] .app-dropdown-trigger {
+      border-bottom: 2.5px solid rgba(0, 229, 255, 0.4);
+      color: #cbf4ff;
+      font-weight: 400;
+    }
+    html[data-fa="aero"][data-theme="dark"] .question input[type="text"]:focus,
+    html[data-fa="aero"][data-theme="dark"] .app-custom-input:focus,
+    html[data-fa="aero"][data-theme="dark"] .app-dropdown-trigger:focus-visible {
+      border-bottom-color: #39ff14;
+    }
+    html[data-fa="aero"][data-theme="dark"] .app-dropdown-trigger.is-empty { color: #4a7d92; }
+    html[data-fa="aero"][data-theme="dark"] .app-dropdown-chevron { color: #00e5ff; }
+    html[data-fa="aero"][data-theme="dark"] .app-custom-input::placeholder { color: #4a7d92; }
+
+    /* Dropdown menu (opened list) */
+    html[data-fa="aero"][data-theme="dark"] .app-dropdown-menu {
+      background: rgba(7, 14, 22, 0.92);
+      border: 1px solid rgba(0, 229, 255, 0.22);
+      box-shadow:
+        inset 0 1px 0 rgba(0, 229, 255, 0.3),
+        0 18px 50px rgba(0, 0, 0, 0.7),
+        0 0 30px rgba(0, 229, 255, 0.1);
+      backdrop-filter: blur(24px) saturate(1.4);
+      -webkit-backdrop-filter: blur(24px) saturate(1.4);
+      border-radius: 14px;
+    }
+    html[data-fa="aero"][data-theme="dark"] .app-dropdown-menu li { color: #cbf4ff; }
+    html[data-fa="aero"][data-theme="dark"] .app-dropdown-menu li:hover {
+      background: linear-gradient(180deg, rgba(57, 255, 20, 0.18), rgba(0, 229, 255, 0.14));
+    }
+    html[data-fa="aero"][data-theme="dark"] .app-dropdown-menu li.is-selected {
+      background: linear-gradient(180deg, rgba(57, 255, 20, 0.22), rgba(0, 229, 255, 0.16));
+      box-shadow: inset 2px 0 0 #39ff14;
+      color: #cbf4ff;
+    }
+
+    /* Radios: smoked obsidian with bioluminescent check */
+    html[data-fa="aero"][data-theme="dark"] .checkbox-list label { color: #cbf4ff; }
+    html[data-fa="aero"][data-theme="dark"] .checkbox-list input[type="radio"] {
+      border: 1.5px solid rgba(0, 229, 255, 0.45);
+      background: rgba(7, 14, 22, 0.65);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+    html[data-fa="aero"][data-theme="dark"] .checkbox-list input[type="radio"]:checked {
+      border-color: #39ff14;
+      background: linear-gradient(180deg, #00e5ff, #39ff14);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.45),
+        inset 0 0 0 3px #0a1a25,
+        0 0 14px rgba(57, 255, 20, 0.5);
+    }
+
+    /* Generar button — electric cyan + chrome inner sheen */
+    html[data-fa="aero"][data-theme="dark"] .generar-btn {
+      background: linear-gradient(180deg, rgba(0, 229, 255, 0.32) 0%, rgba(8, 80, 110, 0.55) 100%);
+      color: #cbf4ff;
+      border: 1px solid rgba(0, 229, 255, 0.42);
+      border-radius: 14px;
+      text-shadow: 0 0 6px rgba(0, 229, 255, 0.6);
+      box-shadow:
+        inset 0 1.5px 0 rgba(203, 244, 255, 0.55),
+        inset 0 -2.5px 0 rgba(0, 80, 110, 0.5),
+        0 8px 24px rgba(0, 0, 0, 0.4),
+        0 0 24px rgba(0, 229, 255, 0.3),
+        0 0 0 1px rgba(0, 229, 255, 0.16);
+    }
+    html[data-fa="aero"][data-theme="dark"] .generar-btn:hover {
+      background: linear-gradient(180deg, rgba(0, 229, 255, 0.45) 0%, rgba(8, 80, 110, 0.65) 100%);
+      box-shadow:
+        inset 0 1.5px 0 rgba(255, 255, 255, 0.75),
+        inset 0 -2.5px 0 rgba(0, 80, 110, 0.5),
+        0 10px 28px rgba(0, 0, 0, 0.5),
+        0 0 34px rgba(0, 229, 255, 0.45),
+        0 0 0 1px rgba(0, 229, 255, 0.3);
+      transform: translateY(-1px);
+    }
+    html[data-fa="aero"][data-theme="dark"] .generar-btn:focus-visible {
+      outline: 2px solid #00e5ff;
+      outline-offset: 3px;
+    }
+    html[data-fa="aero"][data-theme="dark"] .generar-btn:disabled,
+    html[data-fa="aero"][data-theme="dark"] .generar-btn:disabled:hover {
+      background: linear-gradient(180deg, rgba(7, 14, 22, 0.7), rgba(5, 18, 30, 0.65));
+      color: #4a7d92;
+      text-shadow: none;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.06),
+        inset 0 -2px 0 rgba(0, 0, 0, 0.4),
+        0 2px 8px rgba(0, 0, 0, 0.4);
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Threshold segments: smoked with cyan rim glow on active.
+       IMPORTANT: do NOT redefine `transform` here — the existing
+       base rule already applies the scale‑up animation; redefining
+       transforms would override and break the animation. */
+    html[data-fa="aero"][data-theme="dark"] .segment {
+      border-radius: 14px;
+      border: 1px solid rgba(0, 229, 255, 0.12);
+      box-shadow:
+        inset 0 1px 0 rgba(203, 244, 255, 0.18),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+        0 2px 8px rgba(0, 0, 0, 0.45);
+      text-shadow: 0 0 4px rgba(0, 0, 0, 0.65);
+    }
+    html[data-fa="aero"][data-theme="dark"] .segment.is-active {
+      box-shadow:
+        inset 0 1.5px 0 rgba(255, 255, 255, 0.4),
+        0 0 0 2px #00e5ff,
+        0 8px 22px rgba(0, 0, 0, 0.55),
+        0 0 32px rgba(0, 229, 255, 0.55);
+    }
+    /* Yellow segment text inside dark theme — readable dark text */
+    html[data-fa="aero"][data-theme="dark"] .seg-yellow {
+      color: rgba(0, 0, 0, 0.72);
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+    }
+
+    /* Bar chart tracks: dark obsidian */
+    html[data-fa="aero"][data-theme="dark"] .bar-track {
+      background: rgba(7, 14, 22, 0.68);
+      border: 1px solid rgba(0, 229, 255, 0.18);
+      box-shadow:
+        inset 0 1px 0 rgba(0, 229, 255, 0.18),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.4);
+    }
+    html[data-fa="aero"][data-theme="dark"] .bar-name  { color: #5a9ab5; }
+    html[data-fa="aero"][data-theme="dark"] .bar-value {
+      color: #cbf4ff;
+      text-shadow: 0 0 6px rgba(0, 229, 255, 0.3);
+    }
+    html[data-fa="aero"][data-theme="dark"] .bar-chart-msg {
+      color: #cbf4ff;
+      font-weight: 500;
+    }
+    html[data-fa="aero"][data-theme="dark"] .bar-fill {
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.18),
+        0 0 12px rgba(0, 229, 255, 0.18);
+    }
+
+    /* Zone colours — neon brighter than the light-FA palette */
+    html[data-fa="aero"][data-theme="dark"] .result-card[data-zone="0"] .result-summary strong { color: #00e5ff; text-shadow: 0 0 6px rgba(0,229,255,0.4); }
+    html[data-fa="aero"][data-theme="dark"] .result-card[data-zone="1"] .result-summary strong { color: #39ff14; text-shadow: 0 0 6px rgba(57,255,20,0.4); }
+    html[data-fa="aero"][data-theme="dark"] .result-card[data-zone="2"] .result-summary strong { color: #ffd700; text-shadow: 0 0 6px rgba(255,215,0,0.4); }
+    html[data-fa="aero"][data-theme="dark"] .result-card[data-zone="3"] .result-summary strong { color: #ff7700; text-shadow: 0 0 6px rgba(255,119,0,0.4); }
+    html[data-fa="aero"][data-theme="dark"] .result-card[data-zone="4"] .result-summary strong { color: #ff0055; text-shadow: 0 0 6px rgba(255,0,85,0.45); }
+    html[data-fa="aero"][data-theme="dark"] .bar-chart-msg[data-zone="0"] { color: #00e5ff; }
+    html[data-fa="aero"][data-theme="dark"] .bar-chart-msg[data-zone="1"] { color: #39ff14; }
+    html[data-fa="aero"][data-theme="dark"] .bar-chart-msg[data-zone="2"] { color: #ffd700; }
+    html[data-fa="aero"][data-theme="dark"] .bar-chart-msg[data-zone="3"] { color: #ff7700; }
+    html[data-fa="aero"][data-theme="dark"] .bar-chart-msg[data-zone="4"] { color: #ff0055; }
+
+    /* Floating top-right buttons + notifications list header buttons */
+    html[data-fa="aero"][data-theme="dark"] .bell-btn,
+    html[data-fa="aero"][data-theme="dark"] .refresh-btn,
+    html[data-fa="aero"][data-theme="dark"] .notif-clear-btn {
+      background: rgba(7, 14, 22, 0.55);
+      border: 1px solid rgba(0, 229, 255, 0.22);
+      color: #00e5ff;
+      box-shadow: var(--fa-inset-bevel);
+    }
+    html[data-fa="aero"][data-theme="dark"] .bell-btn:hover,
+    html[data-fa="aero"][data-theme="dark"] .refresh-btn:hover,
+    html[data-fa="aero"][data-theme="dark"] .notif-clear-btn:hover {
+      background: rgba(0, 229, 255, 0.08);
+      border-color: rgba(0, 229, 255, 0.45);
+      color: #39ff14;
+      box-shadow:
+        inset 0 1px 0 rgba(0, 229, 255, 0.32),
+        0 4px 18px rgba(0, 229, 255, 0.21);
+    }
+    html[data-fa="aero"][data-theme="dark"] .notif-clear-btn:hover {
+      background: rgba(255, 0, 85, 0.1);
+      border-color: rgba(255, 0, 85, 0.45);
+      color: #ff0055;
+    }
+    html[data-fa="aero"][data-theme="dark"] .notif-title { color: #cbf4ff; }
+    html[data-fa="aero"][data-theme="dark"] .notif-time  { color: #5a9ab5; }
+    html[data-fa="aero"][data-theme="dark"] .notif-empty { color: #5a9ab5; }
+
+    /* Mobile topbar + drawer overlay */
+    html[data-fa="aero"][data-theme="dark"] .mobile-topbar {
+      background: rgba(7, 14, 22, 0.72);
+      border-bottom: 1px solid rgba(0, 229, 255, 0.18);
+      box-shadow: 0 2px 14px rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(24px) saturate(1.4);
+      -webkit-backdrop-filter: blur(24px) saturate(1.4);
+      color: #cbf4ff;
+    }
+    html[data-fa="aero"][data-theme="dark"] .topbar-title { color: #cbf4ff; }
+    html[data-fa="aero"][data-theme="dark"] .hamburger-btn {
+      background: rgba(7, 14, 22, 0.55);
+      border: 1px solid rgba(0, 229, 255, 0.22);
+      color: #00e5ff;
+      box-shadow: var(--fa-inset-bevel);
+    }
+    html[data-fa="aero"][data-theme="dark"] .drawer-overlay { background: rgba(2, 6, 12, 0.85); }
+    html[data-fa="aero"][data-theme="dark"] .main::-webkit-scrollbar-thumb {
+      background-color: rgba(0, 229, 255, 0.35);
+    }
+
+    /* Bubble layer: dark water bubbles reflecting bioluminescent lights */
+    html[data-fa="aero"][data-theme="dark"] .fa-bubble {
+      background: radial-gradient(circle at 32% 28%,
+        rgba(0, 229, 255, 0.45) 0%,
+        rgba(0, 229, 255, 0.18) 30%,
+        rgba(57, 255, 20, 0.08) 70%,
+        transparent 100%);
+      box-shadow:
+        inset -3px -6px 12px rgba(0, 0, 0, 0.55),
+        inset 3px 5px 8px rgba(0, 229, 255, 0.45),
+        0 0 18px rgba(0, 229, 255, 0.22),
+        0 6px 24px rgba(0, 0, 0, 0.4);
+      opacity: 0.85;
+    }
+
+    /* Sparkles become bioluminescent stars */
+    html[data-fa="aero"][data-theme="dark"] .fa-sparkle {
+      color: #ffffff;
+      filter:
+        drop-shadow(0 0 6px #ffffff)
+        drop-shadow(0 0 14px #00e5ff)
+        drop-shadow(0 0 24px rgba(0, 229, 255, 0.45));
+    }
+
+    /* Leaves: dark cyan with bioluminescent edge */
+    html[data-fa="aero"][data-theme="dark"] .fa-leaf {
+      filter:
+        drop-shadow(0 0 10px rgba(0, 229, 255, 0.35))
+        drop-shadow(0 0 18px rgba(57, 255, 20, 0.18));
+      color: #008c8c;
+      opacity: 0.7;
+    }
+
+    /* Sun-flare becomes a dim nebula in dark mode */
+    html[data-fa="aero"][data-theme="dark"] .fa-sun-flare {
+      background:
+        radial-gradient(circle at 60% 40%,
+          rgba(0, 229, 255, 0.32) 0%,
+          rgba(57, 255, 20, 0.14) 25%,
+          rgba(176, 38, 255, 0.18) 50%,
+          transparent 80%);
+      filter: blur(8px);
+    }
+
+    /* Reduced motion: stop the bubbles/sparkles/leaves from drifting. */
+    @media (prefers-reduced-motion: reduce) {
+      html[data-fa="aero"] .fa-bubble,
+      html[data-fa="aero"] .fa-sparkle,
+      html[data-fa="aero"] .fa-leaf,
+      html[data-fa="aero"] .fa-sun-flare,
+      html[data-fa="aero"] body {
+        animation: none !important;
+      }
+    }
   </style>
 </head>
-<body data-view="ficha">
+<body data-view="home">
+  <!-- Frutiger Aereo decorative layer: floating water bubbles, light
+       sparkles, soft leaves, and a static sun‑flare painted over the
+       aurora body background. Always in the DOM; visibility/animation
+       are gated by the [data-fa="aero"] selector so toggling between
+       themes is silent. pointer-events:none so the layer never
+       intercepts taps. -->
+  <div class="fa-bubbles" id="faBubbles" aria-hidden="true">
+    <span class="fa-sun-flare"></span>
+    <span class="fa-bubble" style="--x:6%;  --y:18%; --size:48px; --dur:18s; --delay:-2s;"></span>
+    <span class="fa-bubble" style="--x:18%; --y:62%; --size:72px; --dur:22s; --delay:-7s;"></span>
+    <span class="fa-bubble" style="--x:35%; --y:32%; --size:36px; --dur:14s; --delay:-4s;"></span>
+    <span class="fa-bubble" style="--x:50%; --y:78%; --size:58px; --dur:20s; --delay:-11s;"></span>
+    <span class="fa-bubble" style="--x:64%; --y:14%; --size:24px; --dur:12s; --delay:-1s;"></span>
+    <span class="fa-bubble" style="--x:78%; --y:48%; --size:64px; --dur:24s; --delay:-9s;"></span>
+    <span class="fa-bubble" style="--x:88%; --y:74%; --size:40px; --dur:16s; --delay:-5s;"></span>
+    <span class="fa-bubble" style="--x:42%; --y:6%;  --size:28px; --dur:13s; --delay:-3s;"></span>
+    <span class="fa-bubble" style="--x:8%;  --y:88%; --size:52px; --dur:19s; --delay:-8s;"></span>
+    <span class="fa-bubble" style="--x:92%; --y:24%; --size:32px; --dur:15s; --delay:-6s;"></span>
+    <span class="fa-bubble" style="--x:26%; --y:48%; --size:46px; --dur:21s; --delay:-10s;"></span>
+    <span class="fa-bubble" style="--x:14%; --y:42%; --size:20px; --dur:11s; --delay:-2s;"></span>
+    <span class="fa-sparkle" style="--x:12%; --y:24%; --size:14px; --delay:0s;">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 L13.5 10.5 L22 12 L13.5 13.5 L12 22 L10.5 13.5 L2 12 L10.5 10.5 Z"/></svg>
+    </span>
+    <span class="fa-sparkle" style="--x:72%; --y:14%; --size:18px; --delay:1.2s;">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 L13.5 10.5 L22 12 L13.5 13.5 L12 22 L10.5 13.5 L2 12 L10.5 10.5 Z"/></svg>
+    </span>
+    <span class="fa-sparkle" style="--x:38%; --y:82%; --size:12px; --delay:2.1s;">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 L13.5 10.5 L22 12 L13.5 13.5 L12 22 L10.5 13.5 L2 12 L10.5 10.5 Z"/></svg>
+    </span>
+    <span class="fa-sparkle" style="--x:88%; --y:62%; --size:16px; --delay:0.7s;">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 L13.5 10.5 L22 12 L13.5 13.5 L12 22 L10.5 13.5 L2 12 L10.5 10.5 Z"/></svg>
+    </span>
+    <span class="fa-sparkle" style="--x:58%; --y:36%; --size:10px; --delay:1.8s;">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 L13.5 10.5 L22 12 L13.5 13.5 L12 22 L10.5 13.5 L2 12 L10.5 10.5 Z"/></svg>
+    </span>
+    <span class="fa-sparkle" style="--x:24%; --y:8%;  --size:14px; --delay:0.4s;">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 L13.5 10.5 L22 12 L13.5 13.5 L12 22 L10.5 13.5 L2 12 L10.5 10.5 Z"/></svg>
+    </span>
+    <span class="fa-leaf" style="--x:78%; --y:88%; --size:64px; --delay:-1s;" aria-hidden="true">
+      <svg viewBox="0 0 64 64" fill="currentColor">
+        <defs>
+          <linearGradient id="faLeafGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#74d888"/>
+            <stop offset="1" stop-color="#2faa5e"/>
+          </linearGradient>
+        </defs>
+        <path d="M32 6 C 14 14, 8 36, 22 54 C 46 50, 56 30, 50 12 C 44 8, 36 6, 32 6 Z" fill="url(#faLeafGrad)" opacity="0.75"/>
+        <path d="M30 10 Q 24 32, 22 50" stroke="rgba(20,90,50,0.45)" stroke-width="1.4" fill="none"/>
+      </svg>
+    </span>
+    <span class="fa-leaf" style="--x:4%; --y:74%; --size:48px; --delay:-4s;" aria-hidden="true">
+      <svg viewBox="0 0 64 64" fill="currentColor">
+        <path d="M32 6 C 14 14, 8 36, 22 54 C 46 50, 56 30, 50 12 C 44 8, 36 6, 32 6 Z" fill="url(#faLeafGrad)" opacity="0.7"/>
+        <path d="M30 10 Q 24 32, 22 50" stroke="rgba(20,90,50,0.45)" stroke-width="1.4" fill="none"/>
+      </svg>
+    </span>
+  </div>
   <div class="drawer-overlay" id="drawerOverlay" aria-hidden="true"></div>
   <header class="mobile-topbar">
     <button type="button" class="hamburger-btn" id="hamburgerBtn" aria-label="Abrir menú" aria-expanded="false" title="Menú">
@@ -1350,14 +2559,14 @@
     </button>
 
     <nav class="sidebar-content" aria-label="Navegación principal">
-      <button type="button" class="nav-item" data-target="home">
+      <button type="button" class="nav-item is-active" data-target="home" aria-current="page">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
           <polyline points="9 22 9 12 15 12 15 22"></polyline>
         </svg>
         <span>Inicio</span>
       </button>
-      <button type="button" class="nav-item is-active" data-target="ficha" aria-current="page">
+      <button type="button" class="nav-item" data-target="ficha">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
           <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
@@ -1371,6 +2580,38 @@
         </svg>
         <span>Notificaciones</span>
       </button>
+
+      <!-- Temas submenu (works in both modes).
+           Clicking the toggle expands/collapses the two options.
+           Clicking an option applies the theme + persists the choice
+           in localStorage['faTheme']. The check‑dot inside the option
+           shows the current selection. -->
+      <div class="temas-group">
+        <button type="button" class="nav-item temas-toggle" id="temasToggle" aria-expanded="false" aria-controls="temasSubmenu" aria-label="Temas">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <!-- palette icon: an outer palette blob plus three coloured drops -->
+            <path d="M12 3a9 9 0 1 0 0 18c1.66 0 3-1.34 3-3 0-.78-.3-1.49-.78-2.01A2.01 2.01 0 0 1 16 14h2.66A2.34 2.34 0 0 0 21 11.66 9 9 0 0 0 12 3z"></path>
+            <circle cx="7.5" cy="10.5" r="1.2" fill="currentColor" stroke="none"></circle>
+            <circle cx="10.5" cy="7" r="1.2" fill="currentColor" stroke="none"></circle>
+            <circle cx="14" cy="7" r="1.2" fill="currentColor" stroke="none"></circle>
+          </svg>
+          <span>Temas</span>
+          <svg class="temas-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
+        <div class="temas-submenu" id="temasSubmenu" role="group" aria-label="Opciones de tema">
+          <button type="button" class="nav-item nav-item-sub tema-option is-selected" data-tema="basic">
+            <span class="check-dot" aria-hidden="true"></span>
+            <span>Básico</span>
+          </button>
+          <button type="button" class="nav-item nav-item-sub tema-option" data-tema="aero">
+            <span class="check-dot" aria-hidden="true"></span>
+            <span>Frutiger Aereo</span>
+          </button>
+        </div>
+      </div>
+
       <!-- Theme switcher pinned to the bottom of the sidebar -->
       <label class="theme-switch" for="themeToggle" title="Cambiar tema">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1703,6 +2944,70 @@
     const initialTheme = document.documentElement.getAttribute('data-theme') || 'dark';
     themeToggle.checked = initialTheme === 'light';
     syncToggleLabel(initialTheme);
+
+    // ----- Temas submenu + Frutiger Aereo theme -----
+    // The Frutiger Aereo theme is applied before paint (in the inline
+    // <script> at the very top of <head>); this block just wires the
+    // sidebar submenu to switch it on demand and persists the choice
+    // in localStorage so reloads / cross-tab navigation restore the
+    // same look without flashing.
+    const FA_KEY       = 'faTheme';
+    const temasToggle  = document.getElementById('temasToggle');
+    const temasSubmenu = document.getElementById('temasSubmenu');
+    const temaOptions  = document.querySelectorAll('.tema-option');
+
+    function applyTema(value, opts) {
+      opts = opts || {};
+      const next = value === 'aero' ? 'aero' : 'basic';
+      if (next === 'aero') {
+        document.documentElement.setAttribute('data-fa', 'aero');
+      } else {
+        document.documentElement.removeAttribute('data-fa');
+      }
+      try { localStorage.setItem(FA_KEY, next); } catch (_) { /* ignore */ }
+      temaOptions.forEach((opt) => {
+        opt.classList.toggle('is-selected', opt.dataset.tema === next);
+      });
+      // Auto-collapse only when an external trigger asks for it.
+      // The natural user flow keeps the submenu open after a selection
+      // so the check-dot indicator remains visible and the user can
+      // swap back to Básico without re-expanding the menu.
+      if (opts.collapse) {
+        if (temasSubmenu) temasSubmenu.hidden = true;
+        if (temasToggle)  temasToggle.setAttribute('aria-expanded', 'false');
+      }
+    }
+
+    // Sync UI with whatever the pre-paint script resolved, before the
+    // user even sees the sidebar.
+    applyTema(
+      document.documentElement.getAttribute('data-fa') === 'aero'
+        ? 'aero'
+        : 'basic'
+    );
+
+    if (temasToggle && temasSubmenu) {
+      // Stop the click from bubbling to the global sidebar click
+      // delegator that routes .nav-item[data-target] into setView().
+      // Without this, the Temas toggle click would invoke
+      // setView(undefined) and tear down the current view.
+      temasToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const willOpen = temasSubmenu.hidden;
+        temasSubmenu.hidden = !willOpen;
+        temasToggle.setAttribute('aria-expanded', String(willOpen));
+      });
+    }
+
+    temaOptions.forEach((opt) => {
+      // Same as the toggle click above — stopPropagation prevents
+      // the existing sidebar nav handler from being called with
+      // dataset.tema (which it reads as dataset.target = undefined).
+      opt.addEventListener('click', (e) => {
+        e.stopPropagation();
+        applyTema(opt.dataset.tema || 'basic');
+      });
+    });
 
     // ----- Notification bell (top-right) -----
     const bellBtn  = document.getElementById('bellBtn');
@@ -2175,8 +3480,27 @@
       const adicColor = ZONE_ADIC_COLORS[adicIdx]    || ZONE_ADIC_COLORS[0];
       const timePct   = Math.min(Math.max((timeIdx / 4) * 100, 0), 100);
       const adicPct   = Math.min(Math.max((adicIdx / 2) * 100, 0), 100);
-      const avgPct    = (timePct + adicPct) / 2;
-      const avgIdx    = Math.min(Math.round((avgPct / 100) * 4), 4);
+      // Media (resumen) logic per spec:
+      //   • adiccion = "sí" → always taken into account (blend, can
+      //     escalate to rojo even at high times because the sí pushes
+      //     the avg up).
+      //   • ≥ 2h (121+ min) AND adiccion ≠ "sí" → fuerza naranja (avgIdx = 3).
+      //   • ≥ 3h (181+ min) AND adiccion ≠ "sí" → fuerza rojo    (avgIdx = 4).
+      //   • resto (< 2h AND adiccion ≠ "sí") → blend time + adiccion, así
+      //     la respuesta modula la media entre verde (no) y naranja (sí).
+      let avgPct, avgIdx;
+      if (ADICTION_BY_VALUE.si === adicIdx || timeIdx < 3) {
+        // Either the user reported the strongest "sí" (which always
+        // counts), or the time is below the fuerza threshold — in both
+        // cases, blend time and adiccion as before.
+        avgPct = (timePct + adicPct) / 2;
+        avgIdx = Math.min(Math.round((avgPct / 100) * 4), 4);
+      } else {
+        // High time AND adiccion isn't "sí" → fuerza the avg to the
+        // time-based zone, ignoring the (weaker) adiccion.
+        avgIdx = timeIdx;                  // 3 = naranja, 4 = rojo
+        avgPct = (timeIdx / 4) * 100;
+      }
       // The Media bar uses the SAME discrete zone colour as the
       // contextual message underneath (driven by avgIdx via
       // .bar-chart-msg[data-zone="0..4"]), so the bar and the text
